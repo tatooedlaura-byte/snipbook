@@ -3,6 +3,8 @@ import SwiftData
 
 @main
 struct SnipbookApp: App {
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Book.self,
@@ -23,7 +25,11 @@ struct SnipbookApp: App {
 
     var body: some Scene {
         WindowGroup {
-            BookView()
+            if hasCompletedOnboarding {
+                BookView()
+            } else {
+                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            }
         }
         .modelContainer(sharedModelContainer)
     }

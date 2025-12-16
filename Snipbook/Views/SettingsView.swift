@@ -11,10 +11,22 @@ struct SettingsView: View {
     @State private var showShareSheet = false
 
     private let textures = [
+        // Warm tones
         ("paper-cream", "Cream"),
+        ("paper-butter", "Butter"),
+        ("paper-blush", "Blush"),
+        ("paper-linen", "Linen"),
+        // Neutral tones
         ("paper-white", "White"),
+        ("paper-gray", "Gray"),
+        ("paper-newsprint", "Newsprint"),
         ("paper-kraft", "Kraft"),
-        ("paper-gray", "Gray")
+        // Cool tones
+        ("paper-sage", "Sage"),
+        ("paper-sky", "Sky"),
+        ("paper-lavender", "Lavender"),
+        // Dark mode
+        ("paper-midnight", "Midnight")
     ]
 
     var body: some View {
@@ -88,7 +100,7 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Link(destination: URL(string: "https://example.com/privacy")!) {
+                    Link(destination: URL(string: "https://tatooedlaura-byte.github.io/snipbook/privacy.html")!) {
                         HStack {
                             Text("Privacy Policy")
                             Spacer()
@@ -157,11 +169,23 @@ struct SettingsView: View {
 
     private func textureColor(_ texture: String) -> Color {
         switch texture {
-        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.91)
+        // Warm tones
+        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.93)
+        case "paper-butter": return Color(red: 0.98, green: 0.95, blue: 0.86)
+        case "paper-blush": return Color(red: 0.97, green: 0.91, blue: 0.89)
+        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
+        // Neutral tones
         case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
-        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.68)
         case "paper-gray": return Color(red: 0.94, green: 0.94, blue: 0.94)
-        default: return Color.white
+        case "paper-newsprint": return Color(red: 0.91, green: 0.89, blue: 0.86)
+        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.70)
+        // Cool tones
+        case "paper-sage": return Color(red: 0.91, green: 0.93, blue: 0.90)
+        case "paper-sky": return Color(red: 0.90, green: 0.93, blue: 0.96)
+        case "paper-lavender": return Color(red: 0.93, green: 0.91, blue: 0.95)
+        // Dark mode
+        case "paper-midnight": return Color(red: 0.17, green: 0.24, blue: 0.31)
+        default: return Color(red: 0.98, green: 0.96, blue: 0.93)
         }
     }
 

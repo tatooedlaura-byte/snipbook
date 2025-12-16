@@ -33,12 +33,28 @@ struct PageView: View {
 
     private var backgroundColor: Color {
         switch backgroundTexture {
-        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.91)
+        // Warm tones
+        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.93)
+        case "paper-butter": return Color(red: 0.98, green: 0.95, blue: 0.86)
+        case "paper-blush": return Color(red: 0.97, green: 0.91, blue: 0.89)
+        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
+        // Neutral tones
         case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
-        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.68)
         case "paper-gray": return Color(red: 0.94, green: 0.94, blue: 0.94)
-        default: return Color(red: 0.98, green: 0.96, blue: 0.91)
+        case "paper-newsprint": return Color(red: 0.91, green: 0.89, blue: 0.86)
+        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.70)
+        // Cool tones
+        case "paper-sage": return Color(red: 0.91, green: 0.93, blue: 0.90)
+        case "paper-sky": return Color(red: 0.90, green: 0.93, blue: 0.96)
+        case "paper-lavender": return Color(red: 0.93, green: 0.91, blue: 0.95)
+        // Dark mode
+        case "paper-midnight": return Color(red: 0.17, green: 0.24, blue: 0.31)
+        default: return Color(red: 0.98, green: 0.96, blue: 0.93)
         }
+    }
+
+    private var isDarkTexture: Bool {
+        backgroundTexture == "paper-midnight"
     }
 
     private var textureOverlay: some View {
@@ -82,10 +98,10 @@ struct PageView: View {
         VStack(spacing: 12) {
             Image(systemName: "scissors")
                 .font(.system(size: 32))
-                .foregroundColor(.gray.opacity(0.3))
+                .foregroundColor(isDarkTexture ? .white.opacity(0.3) : .gray.opacity(0.3))
             Text("Tap + to add a snip")
                 .font(.caption)
-                .foregroundColor(.gray.opacity(0.5))
+                .foregroundColor(isDarkTexture ? .white.opacity(0.5) : .gray.opacity(0.5))
         }
     }
 
@@ -129,7 +145,7 @@ struct PageView: View {
                 Spacer()
                 Text("\(pageNumber)")
                     .font(.system(size: 11, design: .serif))
-                    .foregroundColor(.gray.opacity(0.4))
+                    .foregroundColor(isDarkTexture ? .white.opacity(0.4) : .gray.opacity(0.4))
                     .padding(8)
             }
         }

@@ -1,0 +1,59 @@
+<svg width="329" height="155" viewBox="0 0 329 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Medium Widget - Snip + Info -->
+
+  <!-- Background -->
+  <rect width="329" height="155" rx="22" fill="#F7F1EA"/>
+
+  <!-- Sample snip (stamp shape) -->
+  <g transform="translate(20, 17)">
+    <!-- Shadow -->
+    <rect x="3" y="5" width="85" height="102" rx="4" fill="#000" opacity="0.08"/>
+
+    <!-- Stamp -->
+    <rect x="0" y="0" width="85" height="102" rx="4" fill="#E8B89D"/>
+
+    <!-- Perforations top -->
+    <g fill="#F7F1EA">
+      <circle cx="10" cy="0" r="4"/>
+      <circle cx="24" cy="0" r="4"/>
+      <circle cx="38" cy="0" r="4"/>
+      <circle cx="52" cy="0" r="4"/>
+      <circle cx="66" cy="0" r="4"/>
+      <circle cx="78" cy="0" r="4"/>
+    </g>
+
+    <!-- Perforations bottom -->
+    <g fill="#F7F1EA">
+      <circle cx="10" cy="102" r="4"/>
+      <circle cx="24" cy="102" r="4"/>
+      <circle cx="38" cy="102" r="4"/>
+      <circle cx="52" cy="102" r="4"/>
+      <circle cx="66" cy="102" r="4"/>
+      <circle cx="78" cy="102" r="4"/>
+    </g>
+
+    <!-- Photo area -->
+    <rect x="12" y="12" width="61" height="78" rx="2" fill="#87ACBF" opacity="0.5"/>
+    <circle cx="55" cy="30" r="12" fill="#F4D56B" opacity="0.8"/>
+  </g>
+
+  <!-- Info section -->
+  <g transform="translate(130, 25)">
+    <!-- App name -->
+    <text x="0" y="0" font-family="-apple-system, system-ui" font-size="17" font-weight="600" fill="#3D4144">
+      Snipbook
+    </text>
+
+    <!-- Date -->
+    <text x="0" y="24" font-family="-apple-system, system-ui" font-size="13" fill="#6B7075">
+      Dec 16, 2024
+    </text>
+
+    <!-- Snip count -->
+    <g transform="translate(0, 80)">
+      <text x="0" y="0" font-family="-apple-system, system-ui" font-size="12" fill="#6B7075">
+        12 snips
+      </text>
+    </g>
+  </g>
+</svg>

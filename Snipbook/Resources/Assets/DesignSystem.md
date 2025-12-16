@@ -24,10 +24,18 @@
 
 | Name | Hex | RGB | Usage |
 |------|-----|-----|-------|
-| **Paper Cream** | `#FAF5EE` | 250, 245, 238 | Default page background |
-| **Paper White** | `#FCFCFC` | 252, 252, 252 | Clean page option |
-| **Paper Kraft** | `#D9C7B3` | 217, 199, 179 | Kraft/brown paper |
-| **Paper Gray** | `#F0F0F0` | 240, 240, 240 | Modern gray option |
+| **Paper Cream** | `#FAF5EE` | 250, 245, 238 | Default, warm & cozy |
+| **Paper White** | `#FCFCFC` | 252, 252, 252 | Clean, minimal |
+| **Paper Kraft** | `#D9C7B3` | 217, 199, 179 | Brown paper bag feel |
+| **Paper Gray** | `#F0F0F0` | 240, 240, 240 | Modern, neutral |
+| **Paper Blush** | `#F8E8E3` | 248, 232, 227 | Soft pink warmth |
+| **Paper Sage** | `#E8EDE6` | 232, 237, 230 | Gentle green calm |
+| **Paper Sky** | `#E6EEF4` | 230, 238, 244 | Light blue serenity |
+| **Paper Butter** | `#F9F3DC` | 249, 243, 220 | Warm yellow vintage |
+| **Paper Lavender** | `#EDE8F2` | 237, 232, 242 | Soft purple dreamy |
+| **Paper Linen** | `#F1EBE0` | 241, 235, 224 | Natural fabric feel |
+| **Paper Newsprint** | `#E8E4DB` | 232, 228, 219 | Old newspaper warmth |
+| **Paper Midnight** | `#2C3E50` | 44, 62, 80 | Dark mode (light snips) |
 
 ### Neutral Colors
 
