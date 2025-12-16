@@ -1,0 +1,136 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - warm cream gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F7F0E8"/>
+      <stop offset="100%" style="stop-color:#EDE4D8"/>
+    </linearGradient>
+    <filter id="stampShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#8B6914" flood-opacity="0.2"/>
+    </filter>
+    <filter id="scissorShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bgGradient)"/>
+
+  <!-- Decorative dots -->
+  <g opacity="0.08">
+    <circle cx="150" cy="150" r="40" fill="#C4A882"/>
+    <circle cx="874" cy="150" r="40" fill="#C4A882"/>
+    <circle cx="150" cy="874" r="40" fill="#C4A882"/>
+    <circle cx="874" cy="874" r="40" fill="#C4A882"/>
+  </g>
+
+  <!-- Main stamp - simplified clean edges -->
+  <g filter="url(#stampShadow)">
+    <!-- Stamp base -->
+    <rect x="200" y="160" width="580" height="520" rx="24" fill="#E8B89D"/>
+
+    <!-- Perforated edge effect - top -->
+    <g fill="#F7F0E8">
+      <circle cx="240" cy="160" r="16"/>
+      <circle cx="290" cy="160" r="16"/>
+      <circle cx="340" cy="160" r="16"/>
+      <circle cx="390" cy="160" r="16"/>
+      <circle cx="440" cy="160" r="16"/>
+      <circle cx="490" cy="160" r="16"/>
+      <circle cx="540" cy="160" r="16"/>
+      <circle cx="590" cy="160" r="16"/>
+      <circle cx="640" cy="160" r="16"/>
+      <circle cx="690" cy="160" r="16"/>
+      <circle cx="740" cy="160" r="16"/>
+    </g>
+
+    <!-- Perforated edge - bottom -->
+    <g fill="#F7F0E8">
+      <circle cx="240" cy="680" r="16"/>
+      <circle cx="290" cy="680" r="16"/>
+      <circle cx="340" cy="680" r="16"/>
+      <circle cx="390" cy="680" r="16"/>
+      <circle cx="440" cy="680" r="16"/>
+      <circle cx="490" cy="680" r="16"/>
+      <circle cx="540" cy="680" r="16"/>
+      <circle cx="590" cy="680" r="16"/>
+      <circle cx="640" cy="680" r="16"/>
+      <circle cx="690" cy="680" r="16"/>
+      <circle cx="740" cy="680" r="16"/>
+    </g>
+
+    <!-- Perforated edge - left -->
+    <g fill="#F7F0E8">
+      <circle cx="200" cy="200" r="16"/>
+      <circle cx="200" cy="250" r="16"/>
+      <circle cx="200" cy="300" r="16"/>
+      <circle cx="200" cy="350" r="16"/>
+      <circle cx="200" cy="400" r="16"/>
+      <circle cx="200" cy="450" r="16"/>
+      <circle cx="200" cy="500" r="16"/>
+      <circle cx="200" cy="550" r="16"/>
+      <circle cx="200" cy="600" r="16"/>
+      <circle cx="200" cy="650" r="16"/>
+    </g>
+
+    <!-- Perforated edge - right -->
+    <g fill="#F7F0E8">
+      <circle cx="780" cy="200" r="16"/>
+      <circle cx="780" cy="250" r="16"/>
+      <circle cx="780" cy="300" r="16"/>
+      <circle cx="780" cy="350" r="16"/>
+      <circle cx="780" cy="400" r="16"/>
+      <circle cx="780" cy="450" r="16"/>
+      <circle cx="780" cy="500" r="16"/>
+      <circle cx="780" cy="550" r="16"/>
+      <circle cx="780" cy="600" r="16"/>
+      <circle cx="780" cy="650" r="16"/>
+    </g>
+  </g>
+
+  <!-- Photo area inside stamp -->
+  <rect x="250" y="210" width="480" height="380" rx="12" fill="#FBF8F4"/>
+
+  <!-- Simple landscape inside -->
+  <rect x="250" y="210" width="480" height="380" rx="12" fill="#B8D4BA" opacity="0.4"/>
+
+  <!-- Sky gradient feel -->
+  <rect x="250" y="210" width="480" height="180" rx="12" fill="#D4E5F7" opacity="0.5"/>
+
+  <!-- Sun -->
+  <circle cx="620" cy="300" r="50" fill="#F4D56B" opacity="0.9"/>
+
+  <!-- Rolling hills -->
+  <ellipse cx="490" cy="590" rx="280" ry="120" fill="#7BA87B" opacity="0.6"/>
+  <ellipse cx="400" cy="620" rx="220" ry="80" fill="#5D8A5D" opacity="0.7"/>
+
+  <!-- Scissors -->
+  <g transform="translate(720, 780) rotate(-45)" filter="url(#scissorShadow)">
+    <!-- Blade 1 -->
+    <path d="M-10 -8 L100 -25 L105 -15 L-5 2 Z" fill="#71797E"/>
+    <path d="M-10 -8 L100 -25 L100 -20 L-10 -4 Z" fill="#9CA3A8"/>
+
+    <!-- Blade 2 -->
+    <path d="M-10 8 L100 25 L105 15 L-5 -2 Z" fill="#5C6366"/>
+    <path d="M-10 8 L100 25 L100 20 L-10 4 Z" fill="#71797E"/>
+
+    <!-- Pivot screw -->
+    <circle cx="-5" cy="0" r="18" fill="#4A4F52"/>
+    <circle cx="-5" cy="0" r="10" fill="#5C6366"/>
+    <circle cx="-5" cy="0" r="4" fill="#3D4144"/>
+
+    <!-- Handle 1 (top) -->
+    <ellipse cx="-65" cy="-35" rx="50" ry="28" fill="#D17B5D"/>
+    <ellipse cx="-65" cy="-35" rx="30" ry="16" fill="#F5EDE4"/>
+
+    <!-- Handle 2 (bottom) -->
+    <ellipse cx="-65" cy="35" rx="50" ry="28" fill="#D17B5D"/>
+    <ellipse cx="-65" cy="35" rx="30" ry="16" fill="#F5EDE4"/>
+  </g>
+
+  <!-- Snip marks / cut indication -->
+  <g stroke="#5C6366" stroke-width="4" stroke-linecap="round" opacity="0.4">
+    <line x1="800" y1="720" x2="820" y2="700" stroke-dasharray="1 8"/>
+    <line x1="830" y1="690" x2="850" y2="670" stroke-dasharray="1 8"/>
+  </g>
+</svg>

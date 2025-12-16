@@ -1,0 +1,30 @@
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Torn Paper Blob Shape -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <!-- Organic blob path -->
+    <path d="
+      M 100 18
+      C 140 12, 170 35, 178 70
+      C 188 95, 182 130, 175 155
+      C 165 190, 135 208, 100 205
+      C 60 210, 30 185, 22 150
+      C 12 115, 18 75, 35 45
+      C 50 20, 75 15, 100 18
+      Z
+    " fill="#E8B89D"/>
+  </g>
+
+  <!-- Torn paper texture lines -->
+  <g stroke="#D17B5D" stroke-width="0.5" opacity="0.3">
+    <path d="M 45 50 Q 60 55, 55 70" fill="none"/>
+    <path d="M 150 45 Q 160 60, 155 75" fill="none"/>
+    <path d="M 40 140 Q 50 150, 45 165" fill="none"/>
+    <path d="M 155 150 Q 165 160, 160 175" fill="none"/>
+  </g>
+</svg>

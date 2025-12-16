@@ -1,0 +1,34 @@
+<svg width="240" height="120" viewBox="0 0 240 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ticket Shape -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <!-- Main ticket body with notches -->
+    <path d="
+      M 25 15
+      L 215 15
+      Q 225 15, 225 25
+      L 225 45
+      A 12 12 0 0 1 225 75
+      L 225 95
+      Q 225 105, 215 105
+      L 25 105
+      Q 15 105, 15 95
+      L 15 75
+      A 12 12 0 0 1 15 45
+      L 15 25
+      Q 15 15, 25 15
+      Z
+    " fill="#E8B89D"/>
+  </g>
+
+  <!-- Inner area indicator -->
+  <rect x="35" y="25" width="170" height="70" rx="4" fill="none" stroke="#D17B5D" stroke-width="1" stroke-dasharray="4 2" opacity="0.5"/>
+
+  <!-- Decorative dashed line -->
+  <line x1="60" y1="20" x2="60" y2="100" stroke="#D17B5D" stroke-width="1" stroke-dasharray="6 4" opacity="0.4"/>
+</svg>

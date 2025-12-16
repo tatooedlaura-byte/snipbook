@@ -1,0 +1,15 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle Shape -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <circle cx="100" cy="100" r="85" fill="#E8B89D"/>
+  </g>
+
+  <!-- Inner area indicator -->
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#D17B5D" stroke-width="1" stroke-dasharray="4 2" opacity="0.5"/>
+</svg>
