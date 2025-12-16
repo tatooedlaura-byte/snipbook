@@ -1,0 +1,146 @@
+import SwiftUI
+
+/// Displays a single page in the book (1-2 snips)
+struct PageView: View {
+    let page: Page
+    let pageNumber: Int
+    let backgroundTexture: String
+
+    var body: some View {
+        ZStack {
+            // Paper background
+            paperBackground
+
+            // Snips on page
+            snipsLayout
+        }
+        .frame(height: 400)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+    }
+
+    // MARK: - Paper Background
+
+    private var paperBackground: some View {
+        ZStack {
+            // Base color based on texture
+            backgroundColor
+
+            // Subtle texture overlay
+            textureOverlay
+        }
+    }
+
+    private var backgroundColor: Color {
+        switch backgroundTexture {
+        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.91)
+        case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
+        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.68)
+        case "paper-gray": return Color(red: 0.94, green: 0.94, blue: 0.94)
+        default: return Color(red: 0.98, green: 0.96, blue: 0.91)
+        }
+    }
+
+    private var textureOverlay: some View {
+        Canvas { context, size in
+            // Add subtle paper grain
+            for _ in 0..<200 {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let opacity = Double.random(in: 0.02...0.05)
+
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x, y: y, width: 1, height: 1)),
+                    with: .color(.gray.opacity(opacity))
+                )
+            }
+        }
+    }
+
+    // MARK: - Snips Layout
+
+    private var snipsLayout: some View {
+        GeometryReader { geo in
+            let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
+
+            ZStack {
+                if snips.isEmpty {
+                    emptyPagePlaceholder
+                } else if snips.count == 1 {
+                    singleSnipLayout(snips[0], in: geo.size)
+                } else {
+                    doubleSnipLayout(snips, in: geo.size)
+                }
+
+                // Page number
+                pageNumberLabel
+            }
+        }
+    }
+
+    private var emptyPagePlaceholder: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "scissors")
+                .font(.system(size: 32))
+                .foregroundColor(.gray.opacity(0.3))
+            Text("Tap + to add a snip")
+                .font(.caption)
+                .foregroundColor(.gray.opacity(0.5))
+        }
+    }
+
+    private func singleSnipLayout(_ snip: Snip, in size: CGSize) -> some View {
+        // Slight random offset for organic feel
+        let offsetX = CGFloat.random(in: -20...20)
+        let offsetY = CGFloat.random(in: -10...10)
+        let rotation = Double.random(in: -5...5)
+
+        return SnipView(snip: snip, maxSize: min(size.width * 0.7, 280))
+            .rotationEffect(.degrees(rotation))
+            .offset(x: offsetX, y: offsetY)
+    }
+
+    private func doubleSnipLayout(_ snips: [Snip], in size: CGSize) -> some View {
+        let maxSnipSize = min(size.width * 0.45, 180)
+
+        return ZStack {
+            // First snip - top left area
+            SnipView(snip: snips[0], maxSize: maxSnipSize)
+                .rotationEffect(.degrees(Double.random(in: -8...8)))
+                .position(
+                    x: size.width * 0.35 + CGFloat.random(in: -15...15),
+                    y: size.height * 0.38 + CGFloat.random(in: -10...10)
+                )
+
+            // Second snip - bottom right area, slightly overlapping
+            SnipView(snip: snips[1], maxSize: maxSnipSize)
+                .rotationEffect(.degrees(Double.random(in: -8...8)))
+                .position(
+                    x: size.width * 0.62 + CGFloat.random(in: -15...15),
+                    y: size.height * 0.58 + CGFloat.random(in: -10...10)
+                )
+        }
+    }
+
+    private var pageNumberLabel: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Text("\(pageNumber)")
+                    .font(.system(size: 11, design: .serif))
+                    .foregroundColor(.gray.opacity(0.4))
+                    .padding(8)
+            }
+        }
+    }
+}
+
+#Preview {
+    PageView(
+        page: Page(),
+        pageNumber: 1,
+        backgroundTexture: "paper-cream"
+    )
+    .padding()
+}
