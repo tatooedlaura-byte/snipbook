@@ -77,12 +77,6 @@ Snipbook does not collect data from anyone, including children. The app is safe 
 
 If we ever change this policy, we will update this page and the "Last updated" date. Given our commitment to collecting no data, significant changes are unlikely.
 
-### Contact
-
-Questions about this privacy policy?
-
-Email: [your-email@example.com]
-
 ---
 
 ## Summary
