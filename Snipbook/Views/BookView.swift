@@ -12,6 +12,7 @@ struct BookView: View {
     @State private var selectedShape: ShapeType = .postageStamp
     @State private var lastAddedSnip: Snip?
     @State private var showUndoBanner = false
+    @State private var currentPageIndex = 0
     @StateObject private var locationService = LocationService()
 
     var body: some View {
@@ -67,29 +68,25 @@ struct BookView: View {
     // MARK: - Book Content
 
     private var bookContent: some View {
-        ScrollView {
-            LazyVStack(spacing: 24) {
-                // Book header
-                bookHeader
+        VStack(spacing: 24) {
+            // Book header
+            bookHeader
+                .padding(.top, 16)
 
-                // Pages
-                if book.pages.isEmpty {
-                    emptyBookView
-                } else {
-                    ForEach(Array(book.sortedPages.enumerated()), id: \.element.id) { index, page in
-                        PageView(
-                            page: page,
-                            pageNumber: index + 1,
-                            backgroundTexture: book.backgroundTexture
-                        )
-                        .padding(.horizontal, 20)
-                    }
-                }
-
-                // Bottom spacing
-                Color.clear.frame(height: 100)
+            // Pages
+            if book.pages.isEmpty {
+                emptyBookView
+            } else {
+                PageFlipView(
+                    pages: book.sortedPages,
+                    backgroundTexture: book.backgroundTexture,
+                    currentPageIndex: $currentPageIndex
+                )
+                .frame(height: 400)
+                .padding(.horizontal, 20)
             }
-            .padding(.top, 16)
+
+            Spacer()
         }
     }
 
@@ -145,17 +142,17 @@ struct BookView: View {
                 Spacer()
                 Button(action: { showingShapePicker = true }) {
                     Image(systemName: "plus")
-                        .font(.title2.weight(.semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(.white)
-                        .frame(width: 60, height: 60)
+                        .frame(width: 35, height: 35)
                         .background(
                             Circle()
-                                .fill(Color.accentColor)
-                                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                                .fill(Color(red: 0.45, green: 0.45, blue: 0.50))
                         )
                 }
+                .buttonStyle(.plain)
                 .padding(.trailing, 24)
-                .padding(.bottom, 24)
+                .padding(.bottom, 74)
             }
         }
     }

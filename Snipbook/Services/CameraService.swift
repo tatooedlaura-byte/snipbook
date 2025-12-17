@@ -1,6 +1,7 @@
 import AVFoundation
 import UIKit
 import Combine
+import Photos
 
 /// Manages camera capture session
 final class CameraService: NSObject, ObservableObject {
@@ -265,8 +266,38 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
         }
 
         print("CameraService: Photo captured successfully")
+
+        // Save original photo to the photo library
+        saveToPhotoLibrary(image)
+
         DispatchQueue.main.async {
             self.capturedImage = image
+        }
+    }
+
+    private func saveToPhotoLibrary(_ image: UIImage) {
+        // Check if user has enabled saving to photo library
+        guard UserDefaults.standard.object(forKey: "savePhotosToLibrary") == nil ||
+              UserDefaults.standard.bool(forKey: "savePhotosToLibrary") else {
+            print("CameraService: Save to photo library disabled in settings")
+            return
+        }
+
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                print("CameraService: Photo library access not authorized")
+                return
+            }
+
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            } completionHandler: { success, error in
+                if success {
+                    print("CameraService: Photo saved to library")
+                } else if let error = error {
+                    print("CameraService: Failed to save photo: \(error.localizedDescription)")
+                }
+            }
         }
     }
 }

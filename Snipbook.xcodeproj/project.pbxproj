@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0087285312D69B575DD1C168 /* PageFlipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C0A2FF72865965D817893E /* PageFlipView.swift */; };
 		2987F03AAB4327D82B0EE8C3 /* BookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA6B24B0069DE8AC72FFC27 /* BookView.swift */; };
 		308419B8EBAC0BC1105683E7 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54639F7173597B950B90313B /* LocationService.swift */; };
 		49E84FAC362812690451B4D3 /* Pacifico-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 37341C0AEB6A599950E3EFD3 /* Pacifico-Regular.ttf */; };
@@ -40,6 +41,7 @@
 		26E6DD663CD4FE5A84AE5625 /* Snip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snip.swift; sourceTree = "<group>"; };
 		359357C6859EBB795F8AAC66 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		37341C0AEB6A599950E3EFD3 /* Pacifico-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pacifico-Regular.ttf"; sourceTree = "<group>"; };
+		38C0A2FF72865965D817893E /* PageFlipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageFlipView.swift; sourceTree = "<group>"; };
 		5073D5DC4AF82FC243EE9656 /* Lexend-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lexend-Regular.ttf"; sourceTree = "<group>"; };
 		510F71782F4647D82BBEBDF6 /* ShapeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeType.swift; sourceTree = "<group>"; };
 		54639F7173597B950B90313B /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
@@ -70,6 +72,7 @@
 				08A3B8763C5FA0670E122D9A /* CaptureView.swift */,
 				9B2DFEA1860080E74679D55C /* LibraryView.swift */,
 				69FC779324D30FD5AD285FEB /* OnboardingView.swift */,
+				38C0A2FF72865965D817893E /* PageFlipView.swift */,
 				ADA4BF218501A27F1A8A72FC /* PageView.swift */,
 				A76113BBFC7DC21ADECEA716 /* SettingsView.swift */,
 				F35800126B90A589BDC326AA /* ShapePickerView.swift */,
@@ -258,6 +261,7 @@
 				308419B8EBAC0BC1105683E7 /* LocationService.swift in Sources */,
 				E5662F2066FC6CBE7DCD6F86 /* OnboardingView.swift in Sources */,
 				EAA5115A8200994E2EDFA8C0 /* Page.swift in Sources */,
+				0087285312D69B575DD1C168 /* PageFlipView.swift in Sources */,
 				D6A2075D6CF8DCB67528B2BD /* PageView.swift in Sources */,
 				885A4FD29C4DB218B714466D /* SettingsView.swift in Sources */,
 				7FCEB7978D313734F7796206 /* ShapePaths.swift in Sources */,

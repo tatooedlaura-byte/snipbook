@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var exportedPDFURL: URL?
     @State private var showExportSuccess = false
     @State private var showShareSheet = false
+    @AppStorage("savePhotosToLibrary") private var savePhotosToLibrary = true
 
     private let textures = [
         // Warm tones
@@ -56,6 +57,15 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Book Info")
+                }
+
+                // Camera section
+                Section {
+                    Toggle("Save to Photos", isOn: $savePhotosToLibrary)
+                } header: {
+                    Text("Camera")
+                } footer: {
+                    Text("Also save original photos to your photo library when capturing snips")
                 }
 
                 // Background texture section
