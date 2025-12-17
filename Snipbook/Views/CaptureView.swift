@@ -15,6 +15,19 @@ struct CaptureView: View {
     @State private var showPreview = false
     @State private var previewImage: UIImage?
 
+    // Pan and zoom state
+    @State private var imageOffset: CGSize = .zero
+    @State private var imageScale: CGFloat = 1.0
+    @State private var lastOffset: CGSize = .zero
+    @State private var lastScale: CGFloat = 1.0
+
+    private var isCaptureEnabled: Bool {
+        if importedImage != nil {
+            return true
+        }
+        return cameraService.isReady
+    }
+
     var body: some View {
         ZStack {
             // Background
@@ -28,8 +41,9 @@ struct CaptureView: View {
                 cameraView
             }
 
-            // Shape overlay
+            // Shape overlay (doesn't block touches)
             shapeOverlay
+                .allowsHitTesting(false)
 
             // Controls
             VStack {
@@ -65,6 +79,11 @@ struct CaptureView: View {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
                     await MainActor.run {
+                        // Reset pan/zoom for new image
+                        imageOffset = .zero
+                        imageScale = 1.0
+                        lastOffset = .zero
+                        lastScale = 1.0
                         importedImage = image
                     }
                 }
@@ -77,8 +96,22 @@ struct CaptureView: View {
 
     private var cameraView: some View {
         GeometryReader { geo in
-            CameraPreviewView(cameraService: cameraService)
-                .frame(width: geo.size.width, height: geo.size.height)
+            ZStack {
+                CameraPreviewView(cameraService: cameraService)
+                    .frame(width: geo.size.width, height: geo.size.height)
+
+                // Loading indicator while camera initializes
+                if !cameraService.isReady {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                            .tint(.white)
+                        Text("Starting camera...")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                }
+            }
         }
         .ignoresSafeArea()
     }
@@ -90,9 +123,34 @@ struct CaptureView: View {
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(width: geo.size.width * imageScale, height: geo.size.height * imageScale)
+                .offset(imageOffset)
                 .frame(width: geo.size.width, height: geo.size.height)
+                .contentShape(Rectangle())
                 .clipped()
         }
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    imageOffset = CGSize(
+                        width: lastOffset.width + value.translation.width,
+                        height: lastOffset.height + value.translation.height
+                    )
+                }
+                .onEnded { _ in
+                    lastOffset = imageOffset
+                }
+        )
+        .gesture(
+            MagnifyGesture()
+                .onChanged { value in
+                    let newScale = lastScale * value.magnification
+                    imageScale = min(max(newScale, 1.0), 5.0)
+                }
+                .onEnded { _ in
+                    lastScale = imageScale
+                }
+        )
         .ignoresSafeArea()
     }
 
@@ -151,11 +209,16 @@ struct CaptureView: View {
 
             Spacer()
 
-            // Shape indicator
+            // Shape indicator and hint
             VStack(spacing: 4) {
                 Text(selectedShape.displayName)
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.8))
+                if importedImage != nil {
+                    Text("Drag & pinch to adjust")
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.6))
+                }
             }
 
             Spacer()
@@ -193,7 +256,7 @@ struct CaptureView: View {
                         .frame(width: 80, height: 80)
 
                     Circle()
-                        .fill(Color.white)
+                        .fill(isCaptureEnabled ? Color.white : Color.white.opacity(0.5))
                         .frame(width: 68, height: 68)
 
                     if importedImage != nil {
@@ -203,6 +266,7 @@ struct CaptureView: View {
                     }
                 }
             }
+            .disabled(!isCaptureEnabled)
 
             // Clear imported image
             if importedImage != nil {
@@ -282,8 +346,19 @@ struct CaptureView: View {
     private func processImage(_ image: UIImage) {
         isProcessing = true
 
+        let currentOffset = imageOffset
+        let currentScale = imageScale
+
         DispatchQueue.global(qos: .userInitiated).async {
-            guard let maskedData = image.masked(with: selectedShape) else {
+            // Apply crop based on pan/zoom if it's an imported image
+            let imageToMask: UIImage
+            if importedImage != nil {
+                imageToMask = cropImage(image, offset: currentOffset, scale: currentScale)
+            } else {
+                imageToMask = image
+            }
+
+            guard let maskedData = imageToMask.masked(with: selectedShape) else {
                 DispatchQueue.main.async {
                     isProcessing = false
                 }
@@ -299,6 +374,60 @@ struct CaptureView: View {
                 onCapture(maskedData)
             }
         }
+    }
+
+    private func cropImage(_ image: UIImage, offset: CGSize, scale: CGFloat) -> UIImage {
+        // First normalize orientation
+        let normalizedImage = image.normalizedOrientation()
+        let imageSize = normalizedImage.size
+
+        // Calculate visible area based on offset and scale
+        let viewWidth: CGFloat = 400 // approximate view size
+        let viewHeight: CGFloat = 800
+
+        // Convert view coordinates to image coordinates
+        let imageAspect = imageSize.width / imageSize.height
+        let viewAspect = viewWidth / viewHeight
+
+        var drawWidth: CGFloat
+        var drawHeight: CGFloat
+
+        if imageAspect > viewAspect {
+            drawHeight = imageSize.height
+            drawWidth = drawHeight * viewAspect
+        } else {
+            drawWidth = imageSize.width
+            drawHeight = drawWidth / viewAspect
+        }
+
+        // Apply scale
+        drawWidth /= scale
+        drawHeight /= scale
+
+        // Calculate center offset
+        let centerX = imageSize.width / 2 - (offset.width / viewWidth) * drawWidth
+        let centerY = imageSize.height / 2 - (offset.height / viewHeight) * drawHeight
+
+        let cropRect = CGRect(
+            x: centerX - drawWidth / 2,
+            y: centerY - drawHeight / 2,
+            width: drawWidth,
+            height: drawHeight
+        )
+
+        // Clamp to image bounds
+        let clampedRect = CGRect(
+            x: max(0, min(cropRect.minX, imageSize.width - cropRect.width)),
+            y: max(0, min(cropRect.minY, imageSize.height - cropRect.height)),
+            width: min(cropRect.width, imageSize.width),
+            height: min(cropRect.height, imageSize.height)
+        )
+
+        guard let cgImage = normalizedImage.cgImage?.cropping(to: clampedRect) else {
+            return normalizedImage
+        }
+
+        return UIImage(cgImage: cgImage, scale: normalizedImage.scale, orientation: .up)
     }
 }
 

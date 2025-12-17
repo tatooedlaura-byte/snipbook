@@ -82,10 +82,8 @@ struct PageView: View {
             ZStack {
                 if snips.isEmpty {
                     emptyPagePlaceholder
-                } else if snips.count == 1 {
-                    singleSnipLayout(snips[0], in: geo.size)
                 } else {
-                    doubleSnipLayout(snips, in: geo.size)
+                    gridLayout(snips, in: geo.size)
                 }
 
                 // Page number
@@ -105,36 +103,36 @@ struct PageView: View {
         }
     }
 
-    private func singleSnipLayout(_ snip: Snip, in size: CGSize) -> some View {
-        // Slight random offset for organic feel
-        let offsetX = CGFloat.random(in: -20...20)
-        let offsetY = CGFloat.random(in: -10...10)
-        let rotation = Double.random(in: -5...5)
+    private func gridLayout(_ snips: [Snip], in size: CGSize) -> some View {
+        let maxSnipSize = min(size.width * 0.4, 140)
+        let spacing: CGFloat = 12
 
-        return SnipView(snip: snip, maxSize: min(size.width * 0.7, 280))
-            .rotationEffect(.degrees(rotation))
-            .offset(x: offsetX, y: offsetY)
-    }
+        return VStack(spacing: spacing) {
+            // Top row
+            HStack(spacing: spacing) {
+                if snips.count > 0 {
+                    SnipView(snip: snips[0], maxSize: maxSnipSize)
+                }
+                if snips.count > 1 {
+                    SnipView(snip: snips[1], maxSize: maxSnipSize)
+                } else {
+                    Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                }
+            }
 
-    private func doubleSnipLayout(_ snips: [Snip], in size: CGSize) -> some View {
-        let maxSnipSize = min(size.width * 0.45, 180)
-
-        return ZStack {
-            // First snip - top left area
-            SnipView(snip: snips[0], maxSize: maxSnipSize)
-                .rotationEffect(.degrees(Double.random(in: -8...8)))
-                .position(
-                    x: size.width * 0.35 + CGFloat.random(in: -15...15),
-                    y: size.height * 0.38 + CGFloat.random(in: -10...10)
-                )
-
-            // Second snip - bottom right area, slightly overlapping
-            SnipView(snip: snips[1], maxSize: maxSnipSize)
-                .rotationEffect(.degrees(Double.random(in: -8...8)))
-                .position(
-                    x: size.width * 0.62 + CGFloat.random(in: -15...15),
-                    y: size.height * 0.58 + CGFloat.random(in: -10...10)
-                )
+            // Bottom row
+            HStack(spacing: spacing) {
+                if snips.count > 2 {
+                    SnipView(snip: snips[2], maxSize: maxSnipSize)
+                } else {
+                    Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                }
+                if snips.count > 3 {
+                    SnipView(snip: snips[3], maxSize: maxSnipSize)
+                } else {
+                    Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                }
+            }
         }
     }
 

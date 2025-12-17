@@ -33,44 +33,25 @@ final class ImageMaskingService {
         // Create the mask path
         let shapeRect = CGRect(origin: .zero, size: shapeSize)
         let path = ShapePaths.path(for: shapeType, in: shapeRect)
-        let cgPath = path.cgPath
 
-        // Create bitmap context with alpha channel
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let context = CGContext(
-            data: nil,
-            width: Int(shapeSize.width),
-            height: Int(shapeSize.height),
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else {
-            return nil
+        // Use UIKit drawing which handles orientation correctly
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        format.opaque = false
+
+        let renderer = UIGraphicsImageRenderer(size: shapeSize, format: format)
+
+        let maskedImage = renderer.image { context in
+            // Create clipping path
+            let uiPath = UIBezierPath(cgPath: path.cgPath)
+            uiPath.addClip()
+
+            // Calculate how to fill the shape with the image (aspect fill)
+            let imageRect = aspectFillRect(for: image.size, in: shapeRect)
+
+            // Draw the image - UIImage.draw respects orientation
+            image.draw(in: imageRect)
         }
-
-        // Flip context for UIKit coordinate system
-        context.translateBy(x: 0, y: shapeSize.height)
-        context.scaleBy(x: 1, y: -1)
-
-        // Set up clipping with the shape path
-        context.addPath(cgPath)
-        context.clip()
-
-        // Calculate how to fill the shape with the image (aspect fill)
-        let imageRect = aspectFillRect(for: image.size, in: shapeRect)
-
-        // Draw the image clipped to the shape
-        if let cgImage = image.cgImage {
-            context.draw(cgImage, in: imageRect)
-        }
-
-        // Create the masked image
-        guard let maskedCGImage = context.makeImage() else {
-            return nil
-        }
-
-        let maskedImage = UIImage(cgImage: maskedCGImage)
 
         // Return as PNG data with transparency
         return maskedImage.pngData()
@@ -125,10 +106,24 @@ final class ImageMaskingService {
 // MARK: - UIImage Extension for convenience
 extension UIImage {
     func masked(with shapeType: ShapeType) -> Data? {
-        ImageMaskingService.shared.maskImage(self, with: shapeType)
+        ImageMaskingService.shared.maskImage(self.normalizedOrientation(), with: shapeType)
     }
 
     func maskedPreview(with shapeType: ShapeType) -> UIImage? {
-        ImageMaskingService.shared.previewMask(self, with: shapeType)
+        ImageMaskingService.shared.previewMask(self.normalizedOrientation(), with: shapeType)
+    }
+
+    /// Fixes image orientation by redrawing to .up orientation
+    func normalizedOrientation() -> UIImage {
+        if imageOrientation == .up {
+            return self
+        }
+
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        draw(in: CGRect(origin: .zero, size: size))
+        let normalized = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return normalized ?? self
     }
 }

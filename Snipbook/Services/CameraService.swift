@@ -7,10 +7,19 @@ final class CameraService: NSObject, ObservableObject {
     @Published var capturedImage: UIImage?
     @Published var isAuthorized = false
     @Published var error: CameraError?
+    @Published var isReady = false
 
     private let captureSession = AVCaptureSession()
-    private var photoOutput = AVCapturePhotoOutput()
+    private let photoOutput = AVCapturePhotoOutput()
     private var currentCamera: AVCaptureDevice?
+    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
+
+    // Stored preview layer - created once
+    private(set) lazy var previewLayer: AVCaptureVideoPreviewLayer = {
+        let layer = AVCaptureVideoPreviewLayer(session: captureSession)
+        layer.videoGravity = .resizeAspectFill
+        return layer
+    }()
 
     enum CameraError: LocalizedError {
         case unauthorized
@@ -24,12 +33,6 @@ final class CameraService: NSObject, ObservableObject {
             case .captureFailed: return "Failed to capture photo"
             }
         }
-    }
-
-    var previewLayer: AVCaptureVideoPreviewLayer {
-        let layer = AVCaptureVideoPreviewLayer(session: captureSession)
-        layer.videoGravity = .resizeAspectFill
-        return layer
     }
 
     override init() {
@@ -48,6 +51,8 @@ final class CameraService: NSObject, ObservableObject {
                     self?.isAuthorized = granted
                     if granted {
                         self?.setupSession()
+                    } else {
+                        self?.error = .unauthorized
                     }
                 }
             }
@@ -58,75 +63,184 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     private func setupSession() {
-        captureSession.beginConfiguration()
-        captureSession.sessionPreset = .photo
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        // Add camera input
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-              let input = try? AVCaptureDeviceInput(device: camera),
-              captureSession.canAddInput(input) else {
-            error = .configurationFailed
-            captureSession.commitConfiguration()
-            return
+            self.captureSession.beginConfiguration()
+            self.captureSession.sessionPreset = .photo
+
+            // Add camera input
+            guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+                print("CameraService: No back camera available")
+                DispatchQueue.main.async {
+                    self.error = .configurationFailed
+                }
+                self.captureSession.commitConfiguration()
+                return
+            }
+
+            do {
+                let input = try AVCaptureDeviceInput(device: camera)
+                if self.captureSession.canAddInput(input) {
+                    self.captureSession.addInput(input)
+                    self.currentCamera = camera
+                } else {
+                    print("CameraService: Cannot add camera input")
+                    DispatchQueue.main.async {
+                        self.error = .configurationFailed
+                    }
+                    self.captureSession.commitConfiguration()
+                    return
+                }
+            } catch {
+                print("CameraService: Error creating input: \(error)")
+                DispatchQueue.main.async {
+                    self.error = .configurationFailed
+                }
+                self.captureSession.commitConfiguration()
+                return
+            }
+
+            // Add photo output
+            if self.captureSession.canAddOutput(self.photoOutput) {
+                self.captureSession.addOutput(self.photoOutput)
+                self.photoOutput.isHighResolutionCaptureEnabled = true
+            } else {
+                print("CameraService: Cannot add photo output")
+                DispatchQueue.main.async {
+                    self.error = .configurationFailed
+                }
+                self.captureSession.commitConfiguration()
+                return
+            }
+
+            self.captureSession.commitConfiguration()
+            print("CameraService: Session configured successfully")
         }
-
-        captureSession.addInput(input)
-        currentCamera = camera
-
-        // Add photo output
-        guard captureSession.canAddOutput(photoOutput) else {
-            error = .configurationFailed
-            captureSession.commitConfiguration()
-            return
-        }
-
-        captureSession.addOutput(photoOutput)
-        photoOutput.isHighResolutionCaptureEnabled = true
-
-        captureSession.commitConfiguration()
     }
 
     func startSession() {
-        guard !captureSession.isRunning else { return }
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.captureSession.startRunning()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+
+            if self.captureSession.isRunning {
+                print("CameraService: Session already running")
+                DispatchQueue.main.async {
+                    self.isReady = true
+                }
+                return
+            }
+
+            print("CameraService: Starting session...")
+            self.captureSession.startRunning()
+
+            let isRunning = self.captureSession.isRunning
+            print("CameraService: Session running = \(isRunning)")
+
+            DispatchQueue.main.async {
+                self.isReady = isRunning
+            }
         }
     }
 
     func stopSession() {
-        guard captureSession.isRunning else { return }
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.captureSession.stopRunning()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+
+            if self.captureSession.isRunning {
+                print("CameraService: Stopping session...")
+                self.captureSession.stopRunning()
+            }
+
+            DispatchQueue.main.async {
+                self.isReady = false
+            }
         }
     }
 
     func capturePhoto() {
-        let settings = AVCapturePhotoSettings()
-        settings.isHighResolutionPhotoEnabled = true
-        photoOutput.capturePhoto(with: settings, delegate: self)
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+
+            guard self.captureSession.isRunning else {
+                print("CameraService: Cannot capture - session not running")
+                DispatchQueue.main.async {
+                    self.error = .captureFailed
+                }
+                return
+            }
+
+            guard let connection = self.photoOutput.connection(with: .video) else {
+                print("CameraService: Cannot capture - no video connection")
+                DispatchQueue.main.async {
+                    self.error = .captureFailed
+                }
+                return
+            }
+
+            if !connection.isEnabled {
+                connection.isEnabled = true
+            }
+
+            print("CameraService: Capturing photo...")
+            let settings = AVCapturePhotoSettings()
+            self.photoOutput.capturePhoto(with: settings, delegate: self)
+        }
     }
 
     func switchCamera() {
-        captureSession.beginConfiguration()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        // Remove existing input
-        if let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput {
-            captureSession.removeInput(currentInput)
+            DispatchQueue.main.async {
+                self.isReady = false
+            }
+
+            self.captureSession.beginConfiguration()
+
+            // Remove existing input
+            if let currentInput = self.captureSession.inputs.first as? AVCaptureDeviceInput {
+                self.captureSession.removeInput(currentInput)
+            }
+
+            // Toggle position
+            let currentPosition = self.currentCamera?.position ?? .back
+            let newPosition: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
+            print("CameraService: Switching from \(currentPosition) to \(newPosition)")
+
+            guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else {
+                print("CameraService: No camera available for position \(newPosition)")
+                self.captureSession.commitConfiguration()
+                DispatchQueue.main.async {
+                    self.isReady = self.captureSession.isRunning
+                }
+                return
+            }
+
+            do {
+                let newInput = try AVCaptureDeviceInput(device: newCamera)
+                if self.captureSession.canAddInput(newInput) {
+                    self.captureSession.addInput(newInput)
+                    self.currentCamera = newCamera
+
+                    // Configure connection for front camera mirroring
+                    if let connection = self.photoOutput.connection(with: .video) {
+                        connection.isEnabled = true
+                        if connection.isVideoMirroringSupported {
+                            connection.isVideoMirrored = (newPosition == .front)
+                        }
+                    }
+                }
+            } catch {
+                print("CameraService: Error switching camera: \(error)")
+            }
+
+            self.captureSession.commitConfiguration()
+
+            DispatchQueue.main.async {
+                self.isReady = self.captureSession.isRunning
+            }
         }
-
-        // Toggle position
-        let newPosition: AVCaptureDevice.Position = currentCamera?.position == .back ? .front : .back
-
-        guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
-              let newInput = try? AVCaptureDeviceInput(device: newCamera),
-              captureSession.canAddInput(newInput) else {
-            captureSession.commitConfiguration()
-            return
-        }
-
-        captureSession.addInput(newInput)
-        currentCamera = newCamera
-        captureSession.commitConfiguration()
     }
 }
 
@@ -134,17 +248,23 @@ final class CameraService: NSObject, ObservableObject {
 extension CameraService: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
-            print("Capture error: \(error)")
-            self.error = .captureFailed
+            print("CameraService: Capture error: \(error)")
+            DispatchQueue.main.async {
+                self.error = .captureFailed
+            }
             return
         }
 
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else {
-            self.error = .captureFailed
+            print("CameraService: Could not create image from photo data")
+            DispatchQueue.main.async {
+                self.error = .captureFailed
+            }
             return
         }
 
+        print("CameraService: Photo captured successfully")
         DispatchQueue.main.async {
             self.capturedImage = image
         }

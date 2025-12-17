@@ -59,7 +59,7 @@ struct ShapePickerView: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 
@@ -69,9 +69,8 @@ struct ShapePickerView: View {
         let isSelected = selectedShape == shape
 
         return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedShape = shape
-            }
+            selectedShape = shape
+            onContinue()
         } label: {
             VStack(spacing: 12) {
                 // Shape preview

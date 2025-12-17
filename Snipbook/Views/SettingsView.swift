@@ -239,35 +239,62 @@ actor PDFExporter {
         let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
 
+        // Get background color from book's texture setting
+        let backgroundColor = textureToUIColor(book.backgroundTexture)
+
         let data = renderer.pdfData { context in
             for page in book.sortedPages {
                 context.beginPage()
 
                 let contentRect = pageRect.insetBy(dx: margin, dy: margin)
 
-                // Draw page background
-                UIColor(red: 0.98, green: 0.96, blue: 0.91, alpha: 1).setFill()
+                // Draw page background with selected color
+                backgroundColor.setFill()
                 UIBezierPath(rect: contentRect).fill()
 
-                // Draw snips
+                // Draw snips in a 2x2 grid layout
                 let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
+                let snipCount = snips.count
+
+                // Calculate grid cell size
+                let gridSpacing: CGFloat = 20
+                let cellWidth = (contentRect.width - gridSpacing) / 2
+                let cellHeight = (contentRect.height - gridSpacing) / 2
 
                 for (index, snip) in snips.enumerated() {
                     if let image = UIImage(data: snip.maskedImageData) {
-                        let maxSize: CGFloat = snips.count == 1 ? 350 : 250
+                        // Determine grid position (0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right)
+                        let col = index % 2
+                        let row = index / 2
+
+                        // Calculate cell origin
+                        let cellX = contentRect.minX + CGFloat(col) * (cellWidth + gridSpacing)
+                        let cellY = contentRect.minY + CGFloat(row) * (cellHeight + gridSpacing)
+
+                        // Calculate image size to fit in cell while maintaining aspect ratio
+                        let maxSize: CGFloat = snipCount == 1 ? min(cellWidth * 1.5, cellHeight * 1.5) : min(cellWidth * 0.85, cellHeight * 0.85)
                         let aspectRatio = image.size.height / image.size.width
-                        let width = min(maxSize, image.size.width)
-                        let height = width * aspectRatio
+                        var width = min(maxSize, image.size.width)
+                        var height = width * aspectRatio
 
-                        var x: CGFloat
-                        var y: CGFloat
+                        // Ensure height doesn't exceed cell
+                        if height > maxSize {
+                            height = maxSize
+                            width = height / aspectRatio
+                        }
 
-                        if snips.count == 1 {
+                        // Center image in cell (or center of page for single snip)
+                        let x: CGFloat
+                        let y: CGFloat
+
+                        if snipCount == 1 {
+                            // Single snip: center on page
                             x = contentRect.midX - width / 2
                             y = contentRect.midY - height / 2
                         } else {
-                            x = index == 0 ? contentRect.minX + 50 : contentRect.maxX - width - 50
-                            y = index == 0 ? contentRect.minY + 100 : contentRect.maxY - height - 100
+                            // Multiple snips: center in grid cell
+                            x = cellX + (cellWidth - width) / 2
+                            y = cellY + (cellHeight - height) / 2
                         }
 
                         image.draw(in: CGRect(x: x, y: y, width: width, height: height))
@@ -286,6 +313,29 @@ actor PDFExporter {
         } catch {
             print("Failed to save PDF: \(error)")
             return nil
+        }
+    }
+
+    // Convert texture name to UIColor for PDF rendering
+    private static func textureToUIColor(_ texture: String) -> UIColor {
+        switch texture {
+        // Warm tones
+        case "paper-cream": return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
+        case "paper-butter": return UIColor(red: 0.98, green: 0.95, blue: 0.86, alpha: 1)
+        case "paper-blush": return UIColor(red: 0.97, green: 0.91, blue: 0.89, alpha: 1)
+        case "paper-linen": return UIColor(red: 0.95, green: 0.92, blue: 0.88, alpha: 1)
+        // Neutral tones
+        case "paper-white": return UIColor(red: 0.99, green: 0.99, blue: 0.99, alpha: 1)
+        case "paper-gray": return UIColor(red: 0.94, green: 0.94, blue: 0.94, alpha: 1)
+        case "paper-newsprint": return UIColor(red: 0.91, green: 0.89, blue: 0.86, alpha: 1)
+        case "paper-kraft": return UIColor(red: 0.85, green: 0.78, blue: 0.70, alpha: 1)
+        // Cool tones
+        case "paper-sage": return UIColor(red: 0.91, green: 0.93, blue: 0.90, alpha: 1)
+        case "paper-sky": return UIColor(red: 0.90, green: 0.93, blue: 0.96, alpha: 1)
+        case "paper-lavender": return UIColor(red: 0.93, green: 0.91, blue: 0.95, alpha: 1)
+        // Dark mode
+        case "paper-midnight": return UIColor(red: 0.17, green: 0.24, blue: 0.31, alpha: 1)
+        default: return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
         }
     }
 }

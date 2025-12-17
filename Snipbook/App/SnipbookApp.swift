@@ -26,7 +26,7 @@ struct SnipbookApp: App {
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding {
-                BookView()
+                LibraryView()
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
             }

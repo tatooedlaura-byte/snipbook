@@ -5,30 +5,29 @@ import AVFoundation
 struct CameraPreviewView: UIViewRepresentable {
     let cameraService: CameraService
 
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
+    func makeUIView(context: Context) -> PreviewContainerView {
+        let view = PreviewContainerView()
         view.backgroundColor = .black
 
+        // Get the preview layer from camera service and add it
         let previewLayer = cameraService.previewLayer
-        previewLayer.frame = view.bounds
+        view.previewLayer = previewLayer
         view.layer.addSublayer(previewLayer)
-
-        context.coordinator.previewLayer = previewLayer
 
         return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            context.coordinator.previewLayer?.frame = uiView.bounds
-        }
+    func updateUIView(_ uiView: PreviewContainerView, context: Context) {
+        // Frame is updated in layoutSubviews of PreviewContainerView
     }
+}
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
+/// Custom UIView that properly handles preview layer resizing
+class PreviewContainerView: UIView {
+    var previewLayer: AVCaptureVideoPreviewLayer?
 
-    class Coordinator {
-        var previewLayer: AVCaptureVideoPreviewLayer?
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer?.frame = bounds
     }
 }

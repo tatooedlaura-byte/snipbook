@@ -4,7 +4,7 @@ import SwiftData
 /// Main view showing the scrollable book with all pages
 struct BookView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+    @Bindable var book: Book
 
     @State private var showingShapePicker = false
     @State private var showingCapture = false
@@ -12,65 +12,55 @@ struct BookView: View {
     @State private var selectedShape: ShapeType = .postageStamp
     @State private var lastAddedSnip: Snip?
     @State private var showUndoBanner = false
-
-    private var currentBook: Book {
-        if let book = books.first {
-            return book
-        } else {
-            // Create default book if none exists
-            let newBook = Book()
-            modelContext.insert(newBook)
-            return newBook
-        }
-    }
+    @StateObject private var locationService = LocationService()
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Background
-                Color(red: 0.96, green: 0.95, blue: 0.93)
-                    .ignoresSafeArea()
+        ZStack {
+            // Background
+            Color(red: 0.96, green: 0.95, blue: 0.93)
+                .ignoresSafeArea()
 
-                // Book content
-                bookContent
+            // Book content
+            bookContent
 
-                // Floating add button
-                addButton
+            // Floating add button
+            addButton
 
-                // Undo banner
-                if showUndoBanner {
-                    undoBanner
+            // Undo banner
+            if showUndoBanner {
+                undoBanner
+            }
+        }
+        .navigationTitle(book.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: { showingSettings = true }) {
+                    Image(systemName: "gearshape")
                 }
             }
-            .navigationTitle(currentBook.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showingSettings = true }) {
-                        Image(systemName: "gearshape")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingShapePicker) {
-                ShapePickerView(selectedShape: $selectedShape) {
-                    showingShapePicker = false
+        }
+        .sheet(isPresented: $showingShapePicker) {
+            ShapePickerView(selectedShape: $selectedShape) {
+                showingShapePicker = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     showingCapture = true
                 }
             }
-            .fullScreenCover(isPresented: $showingCapture) {
-                CaptureView(
-                    selectedShape: selectedShape,
-                    onCapture: { imageData in
-                        addSnipToBook(imageData: imageData)
-                    },
-                    onCancel: {
-                        showingCapture = false
-                    }
-                )
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView(book: currentBook)
-            }
+        }
+        .fullScreenCover(isPresented: $showingCapture) {
+            CaptureView(
+                selectedShape: selectedShape,
+                onCapture: { imageData in
+                    addSnipToBook(imageData: imageData)
+                },
+                onCancel: {
+                    showingCapture = false
+                }
+            )
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(book: book)
         }
     }
 
@@ -83,14 +73,14 @@ struct BookView: View {
                 bookHeader
 
                 // Pages
-                if currentBook.pages.isEmpty {
+                if book.pages.isEmpty {
                     emptyBookView
                 } else {
-                    ForEach(Array(currentBook.sortedPages.enumerated()), id: \.element.id) { index, page in
+                    ForEach(Array(book.sortedPages.enumerated()), id: \.element.id) { index, page in
                         PageView(
                             page: page,
                             pageNumber: index + 1,
-                            backgroundTexture: currentBook.backgroundTexture
+                            backgroundTexture: book.backgroundTexture
                         )
                         .padding(.horizontal, 20)
                     }
@@ -108,16 +98,15 @@ struct BookView: View {
     private var bookHeader: some View {
         VStack(spacing: 8) {
             Text("Little Moments, Cut & Kept")
-                .font(.system(size: 14, design: .serif))
-                .italic()
-                .foregroundColor(.secondary)
+                .font(.custom("Pacifico-Regular", size: 18))
+                .foregroundColor(Color(red: 0.35, green: 0.35, blue: 0.35))
 
             HStack(spacing: 16) {
-                Label("\(currentBook.snipCount)", systemImage: "scissors")
-                Label("\(currentBook.pageCount)", systemImage: "book.pages")
+                Label("\(book.snipCount)", systemImage: "scissors")
+                Label("\(book.pageCount)", systemImage: "book.pages")
             }
-            .font(.caption)
-            .foregroundColor(.secondary)
+            .font(.custom("Lexend-Regular", size: 12))
+            .foregroundColor(Color(red: 0.35, green: 0.35, blue: 0.35))
         }
         .padding(.bottom, 8)
     }
@@ -130,16 +119,16 @@ struct BookView: View {
 
             Image(systemName: "book.closed")
                 .font(.system(size: 60))
-                .foregroundColor(.secondary.opacity(0.4))
+                .foregroundColor(Color(red: 0.5, green: 0.5, blue: 0.5))
 
             VStack(spacing: 8) {
                 Text("Your book is empty")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
+                    .font(.custom("Pacifico-Regular", size: 22))
+                    .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
 
                 Text("Tap the + button to add your first snip")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary.opacity(0.7))
+                    .font(.custom("Lexend-Regular", size: 14))
+                    .foregroundColor(Color(red: 0.45, green: 0.45, blue: 0.45))
             }
 
             Spacer()
@@ -198,8 +187,14 @@ struct BookView: View {
     // MARK: - Actions
 
     private func addSnipToBook(imageData: Data) {
-        let snip = Snip(maskedImageData: imageData, shapeType: selectedShape)
-        currentBook.addSnip(snip)
+        let snip = Snip(
+            maskedImageData: imageData,
+            shapeType: selectedShape,
+            latitude: locationService.currentLocation?.coordinate.latitude,
+            longitude: locationService.currentLocation?.coordinate.longitude,
+            locationName: locationService.currentPlaceName
+        )
+        book.addSnip(snip)
         lastAddedSnip = snip
 
         // Show undo banner briefly
@@ -217,7 +212,7 @@ struct BookView: View {
         guard let snip = lastAddedSnip else { return }
 
         // Find and remove the snip
-        for page in currentBook.pages {
+        for page in book.pages {
             if let index = page.snips.firstIndex(where: { $0.id == snip.id }) {
                 page.snips.remove(at: index)
 
@@ -237,6 +232,8 @@ struct BookView: View {
 }
 
 #Preview {
-    BookView()
-        .modelContainer(for: [Book.self, Page.self, Snip.self], inMemory: true)
+    NavigationStack {
+        BookView(book: Book())
+    }
+    .modelContainer(for: [Book.self, Page.self, Snip.self], inMemory: true)
 }

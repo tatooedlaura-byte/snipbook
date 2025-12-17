@@ -8,6 +8,14 @@ final class Snip {
     var shapeTypeRaw: String
     var createdAt: Date
 
+    // Location data
+    var latitude: Double?
+    var longitude: Double?
+    var locationName: String?
+
+    // User-editable name
+    var name: String?
+
     @Relationship(inverse: \Page.snips) var page: Page?
 
     var shapeType: ShapeType {
@@ -15,10 +23,17 @@ final class Snip {
         set { shapeTypeRaw = newValue.rawValue }
     }
 
-    init(maskedImageData: Data, shapeType: ShapeType) {
+    var hasLocation: Bool {
+        latitude != nil && longitude != nil
+    }
+
+    init(maskedImageData: Data, shapeType: ShapeType, latitude: Double? = nil, longitude: Double? = nil, locationName: String? = nil) {
         self.id = UUID()
         self.maskedImageData = maskedImageData
         self.shapeTypeRaw = shapeType.rawValue
         self.createdAt = Date()
+        self.latitude = latitude
+        self.longitude = longitude
+        self.locationName = locationName
     }
 }

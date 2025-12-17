@@ -11,7 +11,7 @@ final class Page {
     @Relationship(inverse: \Book.pages) var book: Book?
 
     var isFull: Bool {
-        snips.count >= 2
+        snips.count >= 4
     }
 
     var isEmpty: Bool {
