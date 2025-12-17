@@ -19,7 +19,7 @@ struct LibraryView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color(red: 0.96, green: 0.95, blue: 0.93)
+                Color(red: 0.15, green: 0.15, blue: 0.18)
                     .ignoresSafeArea()
 
                 if books.isEmpty {
@@ -65,32 +65,12 @@ struct LibraryView: View {
     // MARK: - Empty Library View
 
     private var emptyLibraryView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "books.vertical")
-                .font(.system(size: 60))
-                .foregroundColor(Color(red: 0.5, green: 0.5, blue: 0.5))
-
-            VStack(spacing: 8) {
-                Text("No Snipbooks Yet")
-                    .font(.custom("Pacifico-Regular", size: 24))
-                    .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
-
-                Text("Create your first snipbook to start collecting moments")
-                    .font(.custom("Lexend-Regular", size: 14))
-                    .foregroundColor(Color(red: 0.45, green: 0.45, blue: 0.45))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-
-            Button(action: { showingNewBookSheet = true }) {
-                Label("Create Snipbook", systemImage: "plus")
-                    .font(.custom("Pacifico-Regular", size: 18))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .cornerRadius(12)
-            }
+        VStack {
+            Spacer()
+            Text("Tap + to create a snipbook")
+                .font(.custom("Lexend-Regular", size: 14))
+                .foregroundColor(Color.white.opacity(0.5))
+            Spacer()
         }
     }
 

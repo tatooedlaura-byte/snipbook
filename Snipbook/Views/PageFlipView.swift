@@ -5,6 +5,7 @@ import UIKit
 struct PageFlipView: UIViewControllerRepresentable {
     let pages: [Page]
     let backgroundTexture: String
+    let bookTitle: String
     @Binding var currentPageIndex: Int
 
     func makeCoordinator() -> Coordinator {
@@ -46,7 +47,8 @@ struct PageFlipView: UIViewControllerRepresentable {
             let view = PageView(
                 page: page,
                 pageNumber: index + 1,
-                backgroundTexture: parent.backgroundTexture
+                backgroundTexture: parent.backgroundTexture,
+                bookTitle: parent.bookTitle
             )
             let vc = UIHostingController(rootView: AnyView(view))
             vc.view.backgroundColor = .clear

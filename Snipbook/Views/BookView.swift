@@ -32,7 +32,6 @@ struct BookView: View {
                 undoBanner
             }
         }
-        .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -71,7 +70,7 @@ struct BookView: View {
         VStack(spacing: 24) {
             // Book header
             bookHeader
-                .padding(.top, 16)
+                .padding(.top, 60)
 
             // Pages
             if book.pages.isEmpty {
@@ -80,6 +79,7 @@ struct BookView: View {
                 PageFlipView(
                     pages: book.sortedPages,
                     backgroundTexture: book.backgroundTexture,
+                    bookTitle: book.title,
                     currentPageIndex: $currentPageIndex
                 )
                 .frame(height: 400)

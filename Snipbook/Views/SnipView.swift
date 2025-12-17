@@ -4,6 +4,7 @@ import SwiftUI
 struct SnipView: View {
     let snip: Snip
     var maxSize: CGFloat = 150
+    var isDarkBackground: Bool = false
     @State private var showingDetail = false
 
     var body: some View {
@@ -30,7 +31,7 @@ struct SnipView: View {
             if let name = snip.name, !name.isEmpty {
                 Text(name)
                     .font(.custom("Pacifico-Regular", size: 14))
-                    .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
+                    .foregroundColor(isDarkBackground ? .white : Color(red: 0.2, green: 0.2, blue: 0.2))
                     .lineLimit(1)
                     .frame(maxWidth: maxSize)
             }

@@ -5,6 +5,7 @@ struct PageView: View {
     let page: Page
     let pageNumber: Int
     let backgroundTexture: String
+    var bookTitle: String? = nil
 
     var body: some View {
         ZStack {
@@ -80,10 +81,24 @@ struct PageView: View {
             let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
 
             ZStack {
-                if snips.isEmpty {
-                    emptyPagePlaceholder
-                } else {
-                    gridLayout(snips, in: geo.size)
+                VStack(spacing: 0) {
+                    // Book title at top of page
+                    if let title = bookTitle {
+                        Text(title)
+                            .font(.custom("Pacifico-Regular", size: 16))
+                            .foregroundColor(isDarkTexture ? .white.opacity(0.6) : Color(red: 0.4, green: 0.4, blue: 0.4))
+                            .padding(.top, 12)
+                    }
+
+                    Spacer()
+
+                    if snips.isEmpty {
+                        emptyPagePlaceholder
+                    } else {
+                        gridLayout(snips, in: geo.size)
+                    }
+
+                    Spacer()
                 }
 
                 // Page number
@@ -111,10 +126,10 @@ struct PageView: View {
             // Top row
             HStack(spacing: spacing) {
                 if snips.count > 0 {
-                    SnipView(snip: snips[0], maxSize: maxSnipSize)
+                    SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
                 }
                 if snips.count > 1 {
-                    SnipView(snip: snips[1], maxSize: maxSnipSize)
+                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
@@ -123,12 +138,12 @@ struct PageView: View {
             // Bottom row
             HStack(spacing: spacing) {
                 if snips.count > 2 {
-                    SnipView(snip: snips[2], maxSize: maxSnipSize)
+                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
                 if snips.count > 3 {
-                    SnipView(snip: snips[3], maxSize: maxSnipSize)
+                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
