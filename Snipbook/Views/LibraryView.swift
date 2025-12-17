@@ -28,14 +28,7 @@ struct LibraryView: View {
                     booksList
                 }
             }
-            .navigationTitle("My Library")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showingNewBookSheet = true }) {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingNewBookSheet) {
                 newBookSheet
             }
@@ -66,12 +59,32 @@ struct LibraryView: View {
 
     private var emptyLibraryView: some View {
         VStack {
+            libraryHeader
+                .padding(.top, 16)
             Spacer()
             Text("Tap + to create a snipbook")
                 .font(.custom("Lexend-Regular", size: 14))
                 .foregroundColor(Color.white.opacity(0.5))
             Spacer()
         }
+        .ignoresSafeArea(edges: .top)
+    }
+
+    // MARK: - Library Header
+
+    private var libraryHeader: some View {
+        HStack {
+            Text("My Library")
+                .font(.largeTitle.bold())
+                .foregroundColor(.white)
+            Spacer()
+            Button(action: { showingNewBookSheet = true }) {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Books List
@@ -79,6 +92,9 @@ struct LibraryView: View {
     private var booksList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
+                libraryHeader
+                    .padding(.top, 16)
+
                 ForEach(books) { book in
                     BookCard(book: book)
                         .onTapGesture {
@@ -102,8 +118,10 @@ struct LibraryView: View {
                         }
                 }
             }
-            .padding()
+            .padding(.horizontal)
         }
+        .scrollIndicators(.hidden)
+        .ignoresSafeArea(edges: .top)
     }
 
     // MARK: - New Book Sheet
@@ -117,7 +135,6 @@ struct LibraryView: View {
                     Text("Name your new snipbook")
                 }
             }
-            .navigationTitle("New Snipbook")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

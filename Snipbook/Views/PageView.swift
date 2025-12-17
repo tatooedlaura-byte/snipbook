@@ -98,7 +98,7 @@ struct PageView: View {
                         gridLayout(snips, in: geo.size)
                     }
 
-                    Spacer()
+                    Spacer().frame(height: 40)
                 }
 
                 // Page number

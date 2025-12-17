@@ -70,7 +70,7 @@ struct BookView: View {
         VStack(spacing: 24) {
             // Book header
             bookHeader
-                .padding(.top, 60)
+                .padding(.top, 16)
 
             // Pages
             if book.pages.isEmpty {
@@ -152,7 +152,7 @@ struct BookView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, 24)
-                .padding(.bottom, 74)
+                .padding(.bottom, 104)
             }
         }
     }
