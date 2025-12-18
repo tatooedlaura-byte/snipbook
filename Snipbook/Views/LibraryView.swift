@@ -67,7 +67,6 @@ struct LibraryView: View {
                 .foregroundColor(Color.white.opacity(0.5))
             Spacer()
         }
-        .ignoresSafeArea(edges: .top)
     }
 
     // MARK: - Library Header
@@ -121,7 +120,6 @@ struct LibraryView: View {
             .padding(.horizontal)
         }
         .scrollIndicators(.hidden)
-        .ignoresSafeArea(edges: .top)
     }
 
     // MARK: - New Book Sheet
