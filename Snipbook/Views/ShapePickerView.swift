@@ -92,7 +92,7 @@ struct ShapePickerView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemBackground).opacity(0.01))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -101,6 +101,7 @@ struct ShapePickerView: View {
                         lineWidth: 2
                     )
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
