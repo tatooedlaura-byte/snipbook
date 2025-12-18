@@ -31,7 +31,15 @@ struct PageFlipView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ pageVC: UIPageViewController, context: Context) {
+        let oldTexture = context.coordinator.parent.backgroundTexture
         context.coordinator.parent = self
+
+        // Refresh current page if background changed
+        if oldTexture != backgroundTexture, !pages.isEmpty {
+            let index = min(currentPageIndex, pages.count - 1)
+            let vc = context.coordinator.viewController(for: index)
+            pageVC.setViewControllers([vc], direction: .forward, animated: false)
+        }
     }
 
     class Coordinator: NSObject, UIPageViewControllerDelegate, UIPageViewControllerDataSource {

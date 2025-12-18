@@ -15,11 +15,14 @@ struct CaptureView: View {
     @State private var showPreview = false
     @State private var previewImage: UIImage?
 
-    // Pan and zoom state
+    // Pan and zoom state for imported images
     @State private var imageOffset: CGSize = .zero
     @State private var imageScale: CGFloat = 1.0
     @State private var lastOffset: CGSize = .zero
     @State private var lastScale: CGFloat = 1.0
+
+    // Camera zoom state
+    @State private var lastCameraZoom: CGFloat = 1.0
 
     private var isCaptureEnabled: Bool {
         if importedImage != nil {
@@ -111,7 +114,33 @@ struct CaptureView: View {
                             .foregroundColor(.white.opacity(0.7))
                     }
                 }
+
+                // Zoom indicator
+                if cameraService.zoomFactor > 1.0 {
+                    VStack {
+                        Text(String(format: "%.1fx", cameraService.zoomFactor))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Color.black.opacity(0.5)))
+                        Spacer()
+                    }
+                    .padding(.top, 100)
+                }
             }
+            .contentShape(Rectangle())
+            .gesture(
+                MagnifyGesture()
+                    .onChanged { value in
+                        let newZoom = lastCameraZoom * value.magnification
+                        cameraService.setZoom(newZoom)
+                    }
+                    .onEnded { _ in
+                        lastCameraZoom = cameraService.zoomFactor
+                    }
+            )
         }
         .ignoresSafeArea()
     }

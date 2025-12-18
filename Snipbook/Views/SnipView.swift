@@ -1,11 +1,15 @@
 import SwiftUI
+import SwiftData
 
 /// Displays a single snip (masked image) with name below
 struct SnipView: View {
+    @Environment(\.modelContext) private var modelContext
     let snip: Snip
     var maxSize: CGFloat = 150
     var isDarkBackground: Bool = false
+    var onDelete: (() -> Void)? = nil
     @State private var showingDetail = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -39,26 +43,70 @@ struct SnipView: View {
         .onTapGesture {
             showingDetail = true
         }
-        .fullScreenCover(isPresented: $showingDetail) {
-            SnipDetailView(snip: snip)
+        .onLongPressGesture {
+            showingDeleteConfirmation = true
         }
+        .confirmationDialog("Delete this snip?", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                deleteSnip()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .fullScreenCover(isPresented: $showingDetail) {
+            SnipDetailView(snip: snip, onDelete: {
+                showingDetail = false
+                deleteSnip()
+            })
+        }
+    }
+
+    private func deleteSnip() {
+        // Get book reference before modifying
+        let book = snip.page?.book
+
+        // Remove from page first
+        if let page = snip.page {
+            page.snips.removeAll { $0.id == snip.id }
+        }
+
+        // Delete the snip
+        modelContext.delete(snip)
+
+        // Rebalance pages in the book and remove empty pages
+        if let book = book {
+            book.rebalancePages()
+            // Remove any empty pages
+            for page in book.pages where page.isEmpty {
+                modelContext.delete(page)
+            }
+        }
+
+        onDelete?()
     }
 }
 
 /// Full screen detail view for a snip
 struct SnipDetailView: View {
     @Bindable var snip: Snip
+    var onDelete: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var isEditingName = false
     @State private var editedName = ""
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Close button at top
+                // Top bar with delete and close buttons
                 HStack {
+                    Button(action: { showingDeleteConfirmation = true }) {
+                        Image(systemName: "trash.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.red.opacity(0.8))
+                            .padding()
+                    }
                     Spacer()
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
@@ -136,6 +184,12 @@ struct SnipDetailView: View {
                 snip.name = editedName.isEmpty ? nil : editedName
                 isEditingName = false
             }
+        }
+        .confirmationDialog("Delete this snip?", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                onDelete?()
+            }
+            Button("Cancel", role: .cancel) {}
         }
     }
 }

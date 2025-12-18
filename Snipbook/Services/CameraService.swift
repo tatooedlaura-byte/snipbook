@@ -9,6 +9,7 @@ final class CameraService: NSObject, ObservableObject {
     @Published var isAuthorized = false
     @Published var error: CameraError?
     @Published var isReady = false
+    @Published var zoomFactor: CGFloat = 1.0
 
     private let captureSession = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -186,9 +187,46 @@ final class CameraService: NSObject, ObservableObject {
                 connection.isEnabled = true
             }
 
-            print("CameraService: Capturing photo...")
-            let settings = AVCapturePhotoSettings()
-            self.photoOutput.capturePhoto(with: settings, delegate: self)
+            // Ensure zoom is locked during capture
+            if let camera = self.currentCamera {
+                do {
+                    try camera.lockForConfiguration()
+                    print("CameraService: Capturing photo at zoom: \(camera.videoZoomFactor)")
+
+                    let settings = AVCapturePhotoSettings()
+                    self.photoOutput.capturePhoto(with: settings, delegate: self)
+
+                    camera.unlockForConfiguration()
+                } catch {
+                    print("CameraService: Error locking camera: \(error)")
+                    let settings = AVCapturePhotoSettings()
+                    self.photoOutput.capturePhoto(with: settings, delegate: self)
+                }
+            } else {
+                print("CameraService: Capturing photo...")
+                let settings = AVCapturePhotoSettings()
+                self.photoOutput.capturePhoto(with: settings, delegate: self)
+            }
+        }
+    }
+
+    func setZoom(_ factor: CGFloat) {
+        guard let camera = currentCamera else { return }
+
+        sessionQueue.async { [weak self] in
+            do {
+                try camera.lockForConfiguration()
+                let maxZoom = min(camera.activeFormat.videoMaxZoomFactor, 5.0)
+                let clampedFactor = max(1.0, min(factor, maxZoom))
+                camera.videoZoomFactor = clampedFactor
+                camera.unlockForConfiguration()
+
+                DispatchQueue.main.async {
+                    self?.zoomFactor = clampedFactor
+                }
+            } catch {
+                print("CameraService: Error setting zoom: \(error)")
+            }
         }
     }
 
@@ -270,12 +308,44 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
 
         print("CameraService: Photo captured successfully")
 
+        // Apply zoom crop if zoomed in
+        let currentZoom = self.zoomFactor
+        let finalImage: UIImage
+
+        if currentZoom > 1.0 {
+            finalImage = cropImageForZoom(image, zoomFactor: currentZoom)
+            print("CameraService: Applied zoom crop at \(currentZoom)x")
+        } else {
+            finalImage = image
+        }
+
         // Save original photo to the photo library
-        saveToPhotoLibrary(image)
+        saveToPhotoLibrary(finalImage)
 
         DispatchQueue.main.async {
-            self.capturedImage = image
+            self.capturedImage = finalImage
         }
+    }
+
+    private func cropImageForZoom(_ image: UIImage, zoomFactor: CGFloat) -> UIImage {
+        let originalSize = image.size
+
+        // Calculate the cropped region based on zoom
+        let cropWidth = originalSize.width / zoomFactor
+        let cropHeight = originalSize.height / zoomFactor
+        let cropX = (originalSize.width - cropWidth) / 2
+        let cropY = (originalSize.height - cropHeight) / 2
+
+        let cropRect = CGRect(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
+
+        // Normalize orientation first
+        let normalizedImage = image.normalizedOrientation()
+
+        guard let cgImage = normalizedImage.cgImage?.cropping(to: cropRect) else {
+            return image
+        }
+
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: .up)
     }
 
     private func saveToPhotoLibrary(_ image: UIImage) {

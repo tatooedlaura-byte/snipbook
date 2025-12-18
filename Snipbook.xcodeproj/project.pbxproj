@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0087285312D69B575DD1C168 /* PageFlipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C0A2FF72865965D817893E /* PageFlipView.swift */; };
+		22334455667788990011AABB /* PageDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11223344556677889900AABB /* PageDetailView.swift */; };
 		2987F03AAB4327D82B0EE8C3 /* BookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA6B24B0069DE8AC72FFC27 /* BookView.swift */; };
 		308419B8EBAC0BC1105683E7 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54639F7173597B950B90313B /* LocationService.swift */; };
 		3D852AA26848B1C0D21207E5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A2EAB81D4A3D4260FB5EFBC0 /* PrivacyInfo.xcprivacy */; };
@@ -37,6 +38,7 @@
 
 /* Begin PBXFileReference section */
 		008C9F72D30C7F06A6607BCB /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
+		11223344556677889900AABB /* PageDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageDetailView.swift; sourceTree = "<group>"; };
 		08A3B8763C5FA0670E122D9A /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 		20FC749D0E9C5E6048A6218E /* SnipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnipView.swift; sourceTree = "<group>"; };
 		26E6DD663CD4FE5A84AE5625 /* Snip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snip.swift; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 				08A3B8763C5FA0670E122D9A /* CaptureView.swift */,
 				9B2DFEA1860080E74679D55C /* LibraryView.swift */,
 				69FC779324D30FD5AD285FEB /* OnboardingView.swift */,
+				11223344556677889900AABB /* PageDetailView.swift */,
 				38C0A2FF72865965D817893E /* PageFlipView.swift */,
 				ADA4BF218501A27F1A8A72FC /* PageView.swift */,
 				A76113BBFC7DC21ADECEA716 /* SettingsView.swift */,
@@ -265,6 +268,7 @@
 				308419B8EBAC0BC1105683E7 /* LocationService.swift in Sources */,
 				E5662F2066FC6CBE7DCD6F86 /* OnboardingView.swift in Sources */,
 				EAA5115A8200994E2EDFA8C0 /* Page.swift in Sources */,
+				22334455667788990011AABB /* PageDetailView.swift in Sources */,
 				0087285312D69B575DD1C168 /* PageFlipView.swift in Sources */,
 				D6A2075D6CF8DCB67528B2BD /* PageView.swift in Sources */,
 				885A4FD29C4DB218B714466D /* SettingsView.swift in Sources */,

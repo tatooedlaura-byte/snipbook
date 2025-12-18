@@ -50,4 +50,41 @@ final class Book {
         pages.append(newPage)
         return newPage
     }
+
+    /// Rebalances snips across pages after deletion to fill gaps
+    func rebalancePages() {
+        // Collect all snips in order
+        var allSnips: [Snip] = []
+        for page in sortedPages {
+            allSnips.append(contentsOf: page.snips)
+        }
+
+        // Clear all pages
+        for page in pages {
+            page.snips.removeAll()
+        }
+
+        // Redistribute snips (4 per page max)
+        var pageIndex = 0
+        for snip in allSnips {
+            // Get or create page at index
+            while pageIndex >= pages.count {
+                let newPage = Page(orderIndex: pages.count)
+                pages.append(newPage)
+            }
+
+            let page = sortedPages[pageIndex]
+            page.snips.append(snip)
+
+            // Move to next page if this one is full
+            if page.snips.count >= 4 {
+                pageIndex += 1
+            }
+        }
+
+        // Update order indices
+        for (index, page) in sortedPages.enumerated() {
+            page.orderIndex = index
+        }
+    }
 }

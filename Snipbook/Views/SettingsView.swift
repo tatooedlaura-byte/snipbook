@@ -12,22 +12,36 @@ struct SettingsView: View {
     @AppStorage("savePhotosToLibrary") private var savePhotosToLibrary = true
 
     private let textures = [
-        // Warm tones
+        // Classic
         ("paper-cream", "Cream"),
-        ("paper-butter", "Butter"),
-        ("paper-blush", "Blush"),
-        ("paper-linen", "Linen"),
-        // Neutral tones
         ("paper-white", "White"),
+        ("paper-kraft", "Kraft"),
+        // Warm & Bright
+        ("paper-butter", "Butter"),
+        ("paper-sunshine", "Sunshine"),
+        ("paper-peach", "Peach"),
+        ("paper-coral", "Coral"),
+        ("paper-blush", "Blush"),
+        ("paper-rose", "Rose"),
+        // Cool & Fresh
+        ("paper-mint", "Mint"),
+        ("paper-seafoam", "Seafoam"),
+        ("paper-aqua", "Aqua"),
+        ("paper-sky", "Sky"),
+        ("paper-periwinkle", "Periwinkle"),
+        ("paper-lavender", "Lavender"),
+        ("paper-lilac", "Lilac"),
+        // Earthy
+        ("paper-sage", "Sage"),
+        ("paper-olive", "Olive"),
+        ("paper-terracotta", "Terracotta"),
+        ("paper-linen", "Linen"),
+        // Neutral
         ("paper-gray", "Gray"),
         ("paper-newsprint", "Newsprint"),
-        ("paper-kraft", "Kraft"),
-        // Cool tones
-        ("paper-sage", "Sage"),
-        ("paper-sky", "Sky"),
-        ("paper-lavender", "Lavender"),
-        // Dark mode
-        ("paper-midnight", "Midnight")
+        // Dark
+        ("paper-midnight", "Midnight"),
+        ("paper-charcoal", "Charcoal")
     ]
 
     var body: some View {
@@ -179,22 +193,36 @@ struct SettingsView: View {
 
     private func textureColor(_ texture: String) -> Color {
         switch texture {
-        // Warm tones
+        // Classic
         case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.93)
-        case "paper-butter": return Color(red: 0.98, green: 0.95, blue: 0.86)
-        case "paper-blush": return Color(red: 0.97, green: 0.91, blue: 0.89)
-        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
-        // Neutral tones
         case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
-        case "paper-gray": return Color(red: 0.94, green: 0.94, blue: 0.94)
+        case "paper-kraft": return Color(red: 0.82, green: 0.73, blue: 0.62)
+        // Warm & Bright
+        case "paper-butter": return Color(red: 1.0, green: 0.96, blue: 0.76)
+        case "paper-sunshine": return Color(red: 1.0, green: 0.92, blue: 0.55)
+        case "paper-peach": return Color(red: 1.0, green: 0.85, blue: 0.73)
+        case "paper-coral": return Color(red: 1.0, green: 0.75, blue: 0.70)
+        case "paper-blush": return Color(red: 1.0, green: 0.84, blue: 0.84)
+        case "paper-rose": return Color(red: 1.0, green: 0.76, blue: 0.82)
+        // Cool & Fresh
+        case "paper-mint": return Color(red: 0.75, green: 0.95, blue: 0.85)
+        case "paper-seafoam": return Color(red: 0.70, green: 0.92, blue: 0.88)
+        case "paper-aqua": return Color(red: 0.70, green: 0.90, blue: 0.95)
+        case "paper-sky": return Color(red: 0.80, green: 0.90, blue: 1.0)
+        case "paper-periwinkle": return Color(red: 0.80, green: 0.80, blue: 1.0)
+        case "paper-lavender": return Color(red: 0.88, green: 0.82, blue: 0.95)
+        case "paper-lilac": return Color(red: 0.92, green: 0.80, blue: 0.92)
+        // Earthy
+        case "paper-sage": return Color(red: 0.80, green: 0.88, blue: 0.78)
+        case "paper-olive": return Color(red: 0.75, green: 0.78, blue: 0.62)
+        case "paper-terracotta": return Color(red: 0.90, green: 0.70, blue: 0.58)
+        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
+        // Neutral
+        case "paper-gray": return Color(red: 0.92, green: 0.92, blue: 0.92)
         case "paper-newsprint": return Color(red: 0.91, green: 0.89, blue: 0.86)
-        case "paper-kraft": return Color(red: 0.85, green: 0.78, blue: 0.70)
-        // Cool tones
-        case "paper-sage": return Color(red: 0.91, green: 0.93, blue: 0.90)
-        case "paper-sky": return Color(red: 0.90, green: 0.93, blue: 0.96)
-        case "paper-lavender": return Color(red: 0.93, green: 0.91, blue: 0.95)
-        // Dark mode
-        case "paper-midnight": return Color(red: 0.17, green: 0.24, blue: 0.31)
+        // Dark
+        case "paper-midnight": return Color(red: 0.15, green: 0.20, blue: 0.28)
+        case "paper-charcoal": return Color(red: 0.25, green: 0.25, blue: 0.27)
         default: return Color(red: 0.98, green: 0.96, blue: 0.93)
         }
     }
@@ -329,22 +357,36 @@ actor PDFExporter {
     // Convert texture name to UIColor for PDF rendering
     private static func textureToUIColor(_ texture: String) -> UIColor {
         switch texture {
-        // Warm tones
+        // Classic
         case "paper-cream": return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
-        case "paper-butter": return UIColor(red: 0.98, green: 0.95, blue: 0.86, alpha: 1)
-        case "paper-blush": return UIColor(red: 0.97, green: 0.91, blue: 0.89, alpha: 1)
-        case "paper-linen": return UIColor(red: 0.95, green: 0.92, blue: 0.88, alpha: 1)
-        // Neutral tones
         case "paper-white": return UIColor(red: 0.99, green: 0.99, blue: 0.99, alpha: 1)
-        case "paper-gray": return UIColor(red: 0.94, green: 0.94, blue: 0.94, alpha: 1)
+        case "paper-kraft": return UIColor(red: 0.82, green: 0.73, blue: 0.62, alpha: 1)
+        // Warm & Bright
+        case "paper-butter": return UIColor(red: 1.0, green: 0.96, blue: 0.76, alpha: 1)
+        case "paper-sunshine": return UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 1)
+        case "paper-peach": return UIColor(red: 1.0, green: 0.85, blue: 0.73, alpha: 1)
+        case "paper-coral": return UIColor(red: 1.0, green: 0.75, blue: 0.70, alpha: 1)
+        case "paper-blush": return UIColor(red: 1.0, green: 0.84, blue: 0.84, alpha: 1)
+        case "paper-rose": return UIColor(red: 1.0, green: 0.76, blue: 0.82, alpha: 1)
+        // Cool & Fresh
+        case "paper-mint": return UIColor(red: 0.75, green: 0.95, blue: 0.85, alpha: 1)
+        case "paper-seafoam": return UIColor(red: 0.70, green: 0.92, blue: 0.88, alpha: 1)
+        case "paper-aqua": return UIColor(red: 0.70, green: 0.90, blue: 0.95, alpha: 1)
+        case "paper-sky": return UIColor(red: 0.80, green: 0.90, blue: 1.0, alpha: 1)
+        case "paper-periwinkle": return UIColor(red: 0.80, green: 0.80, blue: 1.0, alpha: 1)
+        case "paper-lavender": return UIColor(red: 0.88, green: 0.82, blue: 0.95, alpha: 1)
+        case "paper-lilac": return UIColor(red: 0.92, green: 0.80, blue: 0.92, alpha: 1)
+        // Earthy
+        case "paper-sage": return UIColor(red: 0.80, green: 0.88, blue: 0.78, alpha: 1)
+        case "paper-olive": return UIColor(red: 0.75, green: 0.78, blue: 0.62, alpha: 1)
+        case "paper-terracotta": return UIColor(red: 0.90, green: 0.70, blue: 0.58, alpha: 1)
+        case "paper-linen": return UIColor(red: 0.95, green: 0.92, blue: 0.88, alpha: 1)
+        // Neutral
+        case "paper-gray": return UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
         case "paper-newsprint": return UIColor(red: 0.91, green: 0.89, blue: 0.86, alpha: 1)
-        case "paper-kraft": return UIColor(red: 0.85, green: 0.78, blue: 0.70, alpha: 1)
-        // Cool tones
-        case "paper-sage": return UIColor(red: 0.91, green: 0.93, blue: 0.90, alpha: 1)
-        case "paper-sky": return UIColor(red: 0.90, green: 0.93, blue: 0.96, alpha: 1)
-        case "paper-lavender": return UIColor(red: 0.93, green: 0.91, blue: 0.95, alpha: 1)
-        // Dark mode
-        case "paper-midnight": return UIColor(red: 0.17, green: 0.24, blue: 0.31, alpha: 1)
+        // Dark
+        case "paper-midnight": return UIColor(red: 0.15, green: 0.20, blue: 0.28, alpha: 1)
+        case "paper-charcoal": return UIColor(red: 0.25, green: 0.25, blue: 0.27, alpha: 1)
         default: return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
         }
     }
