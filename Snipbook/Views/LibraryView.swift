@@ -74,7 +74,7 @@ struct LibraryView: View {
     private var libraryHeader: some View {
         HStack {
             Text("My Library")
-                .font(.largeTitle.bold())
+                .font(.custom("Pacifico-Regular", size: 32))
                 .foregroundColor(.white)
             Spacer()
             Button(action: { showingNewBookSheet = true }) {
