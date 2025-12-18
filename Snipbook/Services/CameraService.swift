@@ -105,7 +105,10 @@ final class CameraService: NSObject, ObservableObject {
             // Add photo output
             if self.captureSession.canAddOutput(self.photoOutput) {
                 self.captureSession.addOutput(self.photoOutput)
-                self.photoOutput.isHighResolutionCaptureEnabled = true
+                // Use max photo dimensions for highest quality capture
+                if let maxDimensions = camera.activeFormat.supportedMaxPhotoDimensions.max(by: { $0.width * $0.height < $1.width * $1.height }) {
+                    self.photoOutput.maxPhotoDimensions = maxDimensions
+                }
             } else {
                 print("CameraService: Cannot add photo output")
                 DispatchQueue.main.async {

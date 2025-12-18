@@ -25,6 +25,8 @@ targets:
       - path: Snipbook/Resources/Assets.xcassets
       - path: Snipbook/Resources/Fonts
         buildPhase: resources
+      - path: Snipbook/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
     info:
       path: Snipbook/Resources/Info.plist
       properties:
