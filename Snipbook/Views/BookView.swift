@@ -17,7 +17,6 @@ struct BookView: View {
     @State private var lastPageZoom: CGFloat = 1.0
     @State private var pageOffset: CGSize = .zero
     @State private var lastPageOffset: CGSize = .zero
-    @State private var zoomAnchor: UnitPoint = .center
     @StateObject private var locationService = LocationService()
 
     var body: some View {
@@ -88,17 +87,13 @@ struct BookView: View {
                     currentPageIndex: $currentPageIndex
                 )
                 .frame(height: 400)
-                .scaleEffect(pageZoom, anchor: zoomAnchor)
+                .scaleEffect(pageZoom)
                 .offset(pageOffset)
                 .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8), value: pageZoom)
                 .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8), value: pageOffset)
                 .gesture(
                     MagnifyGesture()
                         .onChanged { value in
-                            // Capture anchor point at start of gesture
-                            if lastPageZoom == 1.0 {
-                                zoomAnchor = value.startAnchor
-                            }
                             let newZoom = lastPageZoom * value.magnification
                             pageZoom = min(max(newZoom, 1.0), 3.0)
                         }
@@ -109,7 +104,6 @@ struct BookView: View {
                                 lastPageZoom = 1.0
                                 pageOffset = .zero
                                 lastPageOffset = .zero
-                                zoomAnchor = .center
                             }
                         }
                 )
@@ -128,15 +122,16 @@ struct BookView: View {
                         }
                 )
                 .onTapGesture(count: 2) {
-                    if pageZoom > 1.0 {
-                        pageZoom = 1.0
-                        lastPageZoom = 1.0
-                        pageOffset = .zero
-                        lastPageOffset = .zero
-                        zoomAnchor = .center
-                    } else {
-                        pageZoom = 2.0
-                        lastPageZoom = 2.0
+                    withAnimation(.spring()) {
+                        if pageZoom > 1.0 {
+                            pageZoom = 1.0
+                            lastPageZoom = 1.0
+                            pageOffset = .zero
+                            lastPageOffset = .zero
+                        } else {
+                            pageZoom = 2.0
+                            lastPageZoom = 2.0
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
