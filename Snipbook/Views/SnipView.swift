@@ -70,23 +70,24 @@ struct SnipDetailView: View {
 
                 Spacer()
 
-                // Image in the middle
+                // Image in the middle - large and prominent
                 if let image = UIImage(data: snip.maskedImageData) {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: UIScreen.main.bounds.height * 0.5)
-                        .padding(.horizontal, 30)
+                        .frame(maxWidth: UIScreen.main.bounds.width * 0.9,
+                               maxHeight: UIScreen.main.bounds.height * 0.65)
+                        .shadow(color: .white.opacity(0.1), radius: 20)
                 }
 
                 Spacer()
 
-                // Info section below image
-                VStack(spacing: 16) {
+                // Info section below image - compact
+                VStack(spacing: 12) {
                     // Editable name
                     if isEditingName {
                         TextField("Name this snip", text: $editedName)
-                            .font(.custom("Pacifico-Regular", size: 20))
+                            .font(.custom("Pacifico-Regular", size: 18))
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 250)
                             .onSubmit {
@@ -98,35 +99,36 @@ struct SnipDetailView: View {
                             editedName = snip.name ?? ""
                             isEditingName = true
                         }) {
-                            HStack(spacing: 8) {
+                            HStack(spacing: 6) {
                                 Text(snip.name ?? "Tap to name")
-                                    .font(.custom("Pacifico-Regular", size: 26))
+                                    .font(.custom("Pacifico-Regular", size: 22))
                                     .foregroundColor(snip.name == nil ? .white.opacity(0.5) : .white)
                                 Image(systemName: "pencil")
-                                    .font(.subheadline)
+                                    .font(.caption)
                                     .foregroundColor(.white.opacity(0.5))
                             }
                         }
                     }
 
-                    // Date and location info
-                    VStack(spacing: 10) {
+                    // Date and location info - single line when possible
+                    HStack(spacing: 12) {
                         Text(snip.createdAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.custom("Lexend-Regular", size: 15))
-                            .foregroundColor(.white.opacity(0.8))
+                            .font(.custom("Lexend-Regular", size: 13))
+                            .foregroundColor(.white.opacity(0.7))
 
                         if let locationName = snip.locationName {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 4) {
                                 Image(systemName: "location.fill")
-                                    .font(.footnote)
+                                    .font(.caption2)
                                 Text(locationName)
-                                    .font(.custom("Lexend-Regular", size: 15))
+                                    .font(.custom("Lexend-Regular", size: 13))
+                                    .lineLimit(1)
                             }
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.7))
                         }
                     }
                 }
-                .padding(.bottom, 60)
+                .padding(.bottom, 40)
             }
         }
         .onTapGesture {
