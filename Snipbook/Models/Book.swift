@@ -7,6 +7,7 @@ final class Book {
     var title: String
     var createdAt: Date
     var backgroundTexture: String
+    var backgroundPattern: String = "none"
 
     @Relationship(deleteRule: .cascade) var pages: [Page]
 

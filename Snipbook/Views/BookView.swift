@@ -83,6 +83,7 @@ struct BookView: View {
                 PageFlipView(
                     pages: book.sortedPages,
                     backgroundTexture: book.backgroundTexture,
+                    backgroundPattern: book.backgroundPattern,
                     bookTitle: book.title,
                     currentPageIndex: $currentPageIndex
                 )

@@ -64,6 +64,13 @@ struct SettingsView: View {
                     Text("Page Background")
                 }
 
+                // Pattern section
+                Section {
+                    patternGrid
+                } header: {
+                    Text("Pattern Overlay")
+                }
+
                 // Export section
                 Section {
                     Button(action: exportToPDF) {
@@ -150,6 +157,49 @@ struct SettingsView: View {
             green: Double((rgb >> 8) & 0xFF) / 255.0,
             blue: Double(rgb & 0xFF) / 255.0
         )
+    }
+
+    // MARK: - Pattern Grid
+
+    private let patterns = [
+        ("none", "None"),
+        ("dots", "Dots"),
+        ("grid", "Grid"),
+        ("lines", "Lines"),
+        ("crosshatch", "Crosshatch"),
+        ("paper", "Paper Grain")
+    ]
+
+    private var patternGrid: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
+            ForEach(patterns, id: \.0) { pattern, name in
+                Button {
+                    book.backgroundPattern = pattern
+                } label: {
+                    VStack(spacing: 6) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(selectedColor)
+                                .frame(width: 60, height: 60)
+
+                            PatternPreview(pattern: pattern)
+                                .frame(width: 60, height: 60)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(book.backgroundPattern == pattern ? Color.accentColor : Color.clear, lineWidth: 2)
+                        )
+
+                        Text(name)
+                            .font(.caption2)
+                            .foregroundColor(.primary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 8)
     }
 
     // MARK: - PDF Export
@@ -296,6 +346,170 @@ actor PDFExporter {
         }
         // Default cream color
         return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
+    }
+}
+
+// MARK: - Pattern Preview (for settings grid)
+
+struct PatternPreview: View {
+    let pattern: String
+
+    var body: some View {
+        Canvas { context, size in
+            drawPattern(context: context, size: size, pattern: pattern)
+        }
+    }
+
+    private func drawPattern(context: GraphicsContext, size: CGSize, pattern: String) {
+        let color = Color.gray.opacity(0.5)
+
+        switch pattern {
+        case "dots":
+            let spacing: CGFloat = 8
+            for x in stride(from: spacing / 2, to: size.width, by: spacing) {
+                for y in stride(from: spacing / 2, to: size.height, by: spacing) {
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: x - 1.5, y: y - 1.5, width: 3, height: 3)),
+                        with: .color(color)
+                    )
+                }
+            }
+
+        case "grid":
+            let spacing: CGFloat = 12
+            for x in stride(from: 0, to: size.width, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+            for y in stride(from: 0, to: size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+
+        case "lines":
+            let spacing: CGFloat = 10
+            for y in stride(from: 0, to: size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+
+        case "crosshatch":
+            let spacing: CGFloat = 10
+            for i in stride(from: -size.height, to: size.width + size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: i, y: 0))
+                path.addLine(to: CGPoint(x: i + size.height, y: size.height))
+                context.stroke(path, with: .color(color), lineWidth: 0.8)
+
+                var path2 = Path()
+                path2.move(to: CGPoint(x: i + size.height, y: 0))
+                path2.addLine(to: CGPoint(x: i, y: size.height))
+                context.stroke(path2, with: .color(color), lineWidth: 0.8)
+            }
+
+        case "paper":
+            for _ in 0..<Int(size.width * size.height / 15) {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let opacity = Double.random(in: 0.1...0.2)
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x, y: y, width: 1.5, height: 1.5)),
+                    with: .color(.gray.opacity(opacity))
+                )
+            }
+
+        default:
+            break
+        }
+    }
+}
+
+// MARK: - Pattern Overlay (for page views)
+
+struct PatternOverlay: View {
+    let pattern: String
+    let isDark: Bool
+
+    var body: some View {
+        Canvas { context, size in
+            drawPattern(context: context, size: size)
+        }
+    }
+
+    private func drawPattern(context: GraphicsContext, size: CGSize) {
+        let color = (isDark ? Color.white : Color.black).opacity(0.25)
+
+        switch pattern {
+        case "dots":
+            let spacing: CGFloat = 16
+            for x in stride(from: spacing / 2, to: size.width, by: spacing) {
+                for y in stride(from: spacing / 2, to: size.height, by: spacing) {
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: x - 2, y: y - 2, width: 4, height: 4)),
+                        with: .color(color)
+                    )
+                }
+            }
+
+        case "grid":
+            let spacing: CGFloat = 24
+            for x in stride(from: 0, to: size.width, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+            for y in stride(from: 0, to: size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+
+        case "lines":
+            let spacing: CGFloat = 20
+            for y in stride(from: 0, to: size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(color), lineWidth: 1)
+            }
+
+        case "crosshatch":
+            let spacing: CGFloat = 20
+            for i in stride(from: -size.height, to: size.width + size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: i, y: 0))
+                path.addLine(to: CGPoint(x: i + size.height, y: size.height))
+                context.stroke(path, with: .color(color), lineWidth: 0.8)
+
+                var path2 = Path()
+                path2.move(to: CGPoint(x: i + size.height, y: 0))
+                path2.addLine(to: CGPoint(x: i, y: size.height))
+                context.stroke(path2, with: .color(color), lineWidth: 0.8)
+            }
+
+        case "paper":
+            for _ in 0..<Int(size.width * size.height / 20) {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let opacity = Double.random(in: 0.08...0.15)
+                let c = isDark ? Color.white : Color.gray
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x, y: y, width: 1.5, height: 1.5)),
+                    with: .color(c.opacity(opacity))
+                )
+            }
+
+        default:
+            break
+        }
     }
 }
 

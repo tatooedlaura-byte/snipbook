@@ -5,6 +5,7 @@ struct PageDetailView: View {
     let page: Page
     let pageNumber: Int
     let backgroundTexture: String
+    var backgroundPattern: String = "none"
     let bookTitle: String
     @Environment(\.dismiss) private var dismiss
 
@@ -102,6 +103,11 @@ struct PageDetailView: View {
             // Paper background
             RoundedRectangle(cornerRadius: 4)
                 .fill(backgroundColor)
+
+            // Pattern overlay
+            if backgroundPattern != "none" {
+                PatternOverlay(pattern: backgroundPattern, isDark: isDarkTexture)
+            }
 
             // Snips layout
             snipsLayout(pageWidth: pageWidth, pageHeight: pageHeight)

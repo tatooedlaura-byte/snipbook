@@ -5,6 +5,7 @@ struct PageView: View {
     let page: Page
     let pageNumber: Int
     let backgroundTexture: String
+    var backgroundPattern: String = "none"
     var bookTitle: String? = nil
 
     var body: some View {
@@ -27,8 +28,10 @@ struct PageView: View {
             // Base color based on texture
             backgroundColor
 
-            // Subtle texture overlay
-            textureOverlay
+            // Pattern overlay
+            if backgroundPattern != "none" {
+                PatternOverlay(pattern: backgroundPattern, isDark: isDarkTexture)
+            }
         }
     }
 
@@ -60,22 +63,6 @@ struct PageView: View {
             }
         }
         return false
-    }
-
-    private var textureOverlay: some View {
-        Canvas { context, size in
-            // Add subtle paper grain
-            for _ in 0..<200 {
-                let x = CGFloat.random(in: 0...size.width)
-                let y = CGFloat.random(in: 0...size.height)
-                let opacity = Double.random(in: 0.02...0.05)
-
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x, y: y, width: 1, height: 1)),
-                    with: .color(.gray.opacity(opacity))
-                )
-            }
-        }
     }
 
     // MARK: - Snips Layout

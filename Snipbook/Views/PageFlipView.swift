@@ -5,6 +5,7 @@ import UIKit
 struct PageFlipView: UIViewControllerRepresentable {
     let pages: [Page]
     let backgroundTexture: String
+    let backgroundPattern: String
     let bookTitle: String
     @Binding var currentPageIndex: Int
 
@@ -32,10 +33,11 @@ struct PageFlipView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ pageVC: UIPageViewController, context: Context) {
         let oldTexture = context.coordinator.parent.backgroundTexture
+        let oldPattern = context.coordinator.parent.backgroundPattern
         context.coordinator.parent = self
 
-        // Refresh current page if background changed
-        if oldTexture != backgroundTexture, !pages.isEmpty {
+        // Refresh current page if background or pattern changed
+        if (oldTexture != backgroundTexture || oldPattern != backgroundPattern), !pages.isEmpty {
             let index = min(currentPageIndex, pages.count - 1)
             let vc = context.coordinator.viewController(for: index)
             pageVC.setViewControllers([vc], direction: .forward, animated: false)
@@ -56,6 +58,7 @@ struct PageFlipView: UIViewControllerRepresentable {
                 page: page,
                 pageNumber: index + 1,
                 backgroundTexture: parent.backgroundTexture,
+                backgroundPattern: parent.backgroundPattern,
                 bookTitle: parent.bookTitle
             )
             let vc = UIHostingController(rootView: AnyView(view))
