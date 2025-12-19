@@ -54,6 +54,23 @@ struct SettingsView: View {
                     Text("Also save original photos to your photo library when capturing snips")
                 }
 
+                // Page layout section
+                Section {
+                    Picker("Snips per Page", selection: $book.snipsPerPage) {
+                        Text("4").tag(4)
+                        Text("5").tag(5)
+                        Text("6").tag(6)
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Page Layout")
+                } footer: {
+                    Text("Maximum snips on each page. Changing this will reflow existing snips.")
+                        .onChange(of: book.snipsPerPage) { _, _ in
+                            book.rebalancePages()
+                        }
+                }
+
                 // Background color section
                 Section {
                     ColorPicker("Background Color", selection: $selectedColor, supportsOpacity: false)

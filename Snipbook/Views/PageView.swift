@@ -116,7 +116,7 @@ struct PageView: View {
     }
 
     private func gridLayout(_ snips: [Snip], in size: CGSize) -> some View {
-        let spacing: CGFloat = 12
+        let spacing: CGFloat = 10
 
         // Single snip gets displayed larger and centered
         if snips.count == 1 {
@@ -126,7 +126,34 @@ struct PageView: View {
             )
         }
 
-        // Multiple snips use grid layout
+        // 5-6 snips: use 3x2 grid with smaller snips
+        if snips.count > 4 {
+            let maxSnipSize = min(size.width * 0.28, 100)
+            return AnyView(VStack(spacing: spacing) {
+                // Top row (3 snips)
+                HStack(spacing: spacing) {
+                    SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                }
+                // Bottom row (up to 3 snips)
+                HStack(spacing: spacing) {
+                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    if snips.count > 4 {
+                        SnipView(snip: snips[4], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    } else {
+                        Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                    }
+                    if snips.count > 5 {
+                        SnipView(snip: snips[5], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    } else {
+                        Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                    }
+                }
+            })
+        }
+
+        // 2-4 snips: use 2x2 grid
         let maxSnipSize = min(size.width * 0.4, 140)
 
         return AnyView(VStack(spacing: spacing) {

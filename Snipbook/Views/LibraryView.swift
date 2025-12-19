@@ -73,7 +73,7 @@ struct LibraryView: View {
 
     private var libraryHeader: some View {
         HStack {
-            Text("My Library")
+            Text("Snipbook")
                 .font(.custom("Pacifico-Regular", size: 32))
                 .foregroundColor(.white)
             Spacer()

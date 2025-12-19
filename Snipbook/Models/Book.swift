@@ -8,6 +8,7 @@ final class Book {
     var createdAt: Date
     var backgroundTexture: String
     var backgroundPattern: String = "none"
+    var snipsPerPage: Int = 4
 
     @Relationship(deleteRule: .cascade) var pages: [Page]
 
@@ -37,11 +38,11 @@ final class Book {
 
     func addSnip(_ snip: Snip) {
         // Find or create a page with space
-        if let page = sortedPages.last, !page.isFull {
-            page.addSnip(snip)
+        if let page = sortedPages.last, page.snips.count < snipsPerPage {
+            page.snips.append(snip)
         } else {
             let newPage = Page(orderIndex: pages.count)
-            newPage.addSnip(snip)
+            newPage.snips.append(snip)
             pages.append(newPage)
         }
     }
@@ -65,7 +66,7 @@ final class Book {
             page.snips.removeAll()
         }
 
-        // Redistribute snips (4 per page max)
+        // Redistribute snips based on snipsPerPage setting
         var pageIndex = 0
         for snip in allSnips {
             // Get or create page at index
@@ -78,7 +79,7 @@ final class Book {
             page.snips.append(snip)
 
             // Move to next page if this one is full
-            if page.snips.count >= 4 {
+            if page.snips.count >= snipsPerPage {
                 pageIndex += 1
             }
         }
