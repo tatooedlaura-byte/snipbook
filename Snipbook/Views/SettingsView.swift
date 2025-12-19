@@ -58,8 +58,8 @@ struct SettingsView: View {
                 Section {
                     Picker("Snips per Page", selection: $book.snipsPerPage) {
                         Text("4").tag(4)
-                        Text("5").tag(5)
                         Text("6").tag(6)
+                        Text("9").tag(9)
                     }
                     .pickerStyle(.segmented)
                 } header: {
@@ -298,8 +298,8 @@ actor PDFExporter {
         let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
 
-        // Get background color from book's texture setting
-        let backgroundColor = textureToUIColor(book.backgroundTexture)
+        let pattern = book.backgroundPattern
+        let snipsPerPage = book.snipsPerPage
 
         let data = renderer.pdfData { context in
             for page in book.sortedPages {
@@ -307,51 +307,55 @@ actor PDFExporter {
 
                 let contentRect = pageRect.insetBy(dx: margin, dy: margin)
 
-                // Draw page background with selected color
-                backgroundColor.setFill()
-                UIBezierPath(rect: contentRect).fill()
+                // Draw background (color, pattern, or fun background)
+                drawBackground(in: contentRect, texture: book.backgroundTexture, pattern: pattern)
 
-                // Draw snips in a 2x2 grid layout
+                // Draw snips
                 let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
                 let snipCount = snips.count
 
-                // Calculate grid cell size
+                // Calculate grid based on snip count
                 let gridSpacing: CGFloat = 20
-                let cellWidth = (contentRect.width - gridSpacing) / 2
-                let cellHeight = (contentRect.height - gridSpacing) / 2
+                let columns: Int
+                let rows: Int
+                if snipCount > 6 {
+                    columns = 3
+                    rows = 3
+                } else if snipCount > 4 {
+                    columns = 3
+                    rows = 2
+                } else {
+                    columns = 2
+                    rows = 2
+                }
+                let cellWidth = (contentRect.width - CGFloat(columns - 1) * gridSpacing) / CGFloat(columns)
+                let cellHeight = (contentRect.height - CGFloat(rows - 1) * gridSpacing) / CGFloat(rows)
 
                 for (index, snip) in snips.enumerated() {
                     if let image = UIImage(data: snip.maskedImageData) {
-                        // Determine grid position (0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right)
-                        let col = index % 2
-                        let row = index / 2
+                        let col = index % columns
+                        let row = index / columns
 
-                        // Calculate cell origin
                         let cellX = contentRect.minX + CGFloat(col) * (cellWidth + gridSpacing)
                         let cellY = contentRect.minY + CGFloat(row) * (cellHeight + gridSpacing)
 
-                        // Calculate image size to fit in cell while maintaining aspect ratio
                         let maxSize: CGFloat = snipCount == 1 ? min(cellWidth * 1.5, cellHeight * 1.5) : min(cellWidth * 0.85, cellHeight * 0.85)
                         let aspectRatio = image.size.height / image.size.width
                         var width = min(maxSize, image.size.width)
                         var height = width * aspectRatio
 
-                        // Ensure height doesn't exceed cell
                         if height > maxSize {
                             height = maxSize
                             width = height / aspectRatio
                         }
 
-                        // Center image in cell (or center of page for single snip)
                         let x: CGFloat
                         let y: CGFloat
 
                         if snipCount == 1 {
-                            // Single snip: center on page
                             x = contentRect.midX - width / 2
                             y = contentRect.midY - height / 2
                         } else {
-                            // Multiple snips: center in grid cell
                             x = cellX + (cellWidth - width) / 2
                             y = cellY + (cellHeight - height) / 2
                         }
@@ -392,6 +396,302 @@ actor PDFExporter {
         }
         // Default cream color
         return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
+    }
+
+    // Draw background with color, pattern, or fun background
+    private static func drawBackground(in rect: CGRect, texture: String, pattern: String) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+
+        // Fun backgrounds draw their own base color
+        let funPatterns = ["bubbles", "retro", "stars", "hearts", "confetti", "waves"]
+        if funPatterns.contains(pattern) {
+            drawFunBackground(in: rect, pattern: pattern, context: context)
+            return
+        }
+
+        // Draw solid background color
+        let bgColor = textureToUIColor(texture)
+        context.setFillColor(bgColor.cgColor)
+        context.fill(rect)
+
+        // Draw pattern overlay if not "none"
+        if pattern != "none" {
+            drawPatternOverlay(in: rect, pattern: pattern, context: context, texture: texture)
+        }
+    }
+
+    // Draw pattern overlays (dots, grid, lines, crosshatch, paper)
+    private static func drawPatternOverlay(in rect: CGRect, pattern: String, context: CGContext, texture: String) {
+        let isDark = isTextureDark(texture)
+        let overlayColor = isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor.black.withAlphaComponent(0.25)
+
+        context.saveGState()
+        context.clip(to: rect)
+
+        switch pattern {
+        case "dots":
+            let spacing: CGFloat = 16
+            context.setFillColor(overlayColor.cgColor)
+            for x in stride(from: rect.minX + spacing / 2, to: rect.maxX, by: spacing) {
+                for y in stride(from: rect.minY + spacing / 2, to: rect.maxY, by: spacing) {
+                    context.fillEllipse(in: CGRect(x: x - 2, y: y - 2, width: 4, height: 4))
+                }
+            }
+
+        case "grid":
+            let spacing: CGFloat = 24
+            context.setStrokeColor(overlayColor.cgColor)
+            context.setLineWidth(1)
+            for x in stride(from: rect.minX, to: rect.maxX, by: spacing) {
+                context.move(to: CGPoint(x: x, y: rect.minY))
+                context.addLine(to: CGPoint(x: x, y: rect.maxY))
+            }
+            for y in stride(from: rect.minY, to: rect.maxY, by: spacing) {
+                context.move(to: CGPoint(x: rect.minX, y: y))
+                context.addLine(to: CGPoint(x: rect.maxX, y: y))
+            }
+            context.strokePath()
+
+        case "lines":
+            let spacing: CGFloat = 20
+            context.setStrokeColor(overlayColor.cgColor)
+            context.setLineWidth(1)
+            for y in stride(from: rect.minY, to: rect.maxY, by: spacing) {
+                context.move(to: CGPoint(x: rect.minX, y: y))
+                context.addLine(to: CGPoint(x: rect.maxX, y: y))
+            }
+            context.strokePath()
+
+        case "crosshatch":
+            let spacing: CGFloat = 20
+            context.setStrokeColor(overlayColor.cgColor)
+            context.setLineWidth(0.8)
+            for i in stride(from: -rect.height, to: rect.width + rect.height, by: spacing) {
+                context.move(to: CGPoint(x: rect.minX + i, y: rect.minY))
+                context.addLine(to: CGPoint(x: rect.minX + i + rect.height, y: rect.maxY))
+                context.move(to: CGPoint(x: rect.minX + i + rect.height, y: rect.minY))
+                context.addLine(to: CGPoint(x: rect.minX + i, y: rect.maxY))
+            }
+            context.strokePath()
+
+        case "paper":
+            let particleColor = isDark ? UIColor.white : UIColor.gray
+            for _ in 0..<Int(rect.width * rect.height / 20) {
+                let x = CGFloat.random(in: rect.minX...rect.maxX)
+                let y = CGFloat.random(in: rect.minY...rect.maxY)
+                let opacity = CGFloat.random(in: 0.08...0.15)
+                context.setFillColor(particleColor.withAlphaComponent(opacity).cgColor)
+                context.fillEllipse(in: CGRect(x: x, y: y, width: 1.5, height: 1.5))
+            }
+
+        default:
+            break
+        }
+
+        context.restoreGState()
+    }
+
+    // Draw fun backgrounds (bubbles, retro, stars, hearts, confetti, waves)
+    private static func drawFunBackground(in rect: CGRect, pattern: String, context: CGContext) {
+        context.saveGState()
+        context.clip(to: rect)
+
+        switch pattern {
+        case "bubbles":
+            // Light blue base
+            context.setFillColor(UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1).cgColor)
+            context.fill(rect)
+            // Colorful bubbles
+            let colors: [UIColor] = [.systemPink, .systemPurple, .systemBlue, .systemCyan, .systemMint, .systemYellow, .systemOrange]
+            for _ in 0..<35 {
+                let x = CGFloat.random(in: rect.minX...rect.maxX)
+                let y = CGFloat.random(in: rect.minY...rect.maxY)
+                let radius = CGFloat.random(in: 10...35)
+                let color = colors.randomElement()!.withAlphaComponent(0.4)
+                context.setFillColor(color.cgColor)
+                context.fillEllipse(in: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2))
+                context.setStrokeColor(color.withAlphaComponent(0.6).cgColor)
+                context.setLineWidth(2)
+                context.strokeEllipse(in: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2))
+            }
+
+        case "retro":
+            // 80s sunset gradient
+            let gradientColors: [CGColor] = [
+                UIColor(red: 0.1, green: 0.0, blue: 0.2, alpha: 1).cgColor,
+                UIColor(red: 0.3, green: 0.0, blue: 0.3, alpha: 1).cgColor,
+                UIColor(red: 0.6, green: 0.1, blue: 0.4, alpha: 1).cgColor,
+                UIColor(red: 0.9, green: 0.3, blue: 0.5, alpha: 1).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 0.33, 0.66, 1])!
+            context.drawLinearGradient(gradient, start: CGPoint(x: rect.midX, y: rect.minY), end: CGPoint(x: rect.midX, y: rect.maxY), options: [])
+            // Neon grid
+            let gridColor = UIColor.cyan.withAlphaComponent(0.6)
+            context.setStrokeColor(gridColor.cgColor)
+            context.setLineWidth(1)
+            let spacing: CGFloat = 25
+            for x in stride(from: rect.minX, to: rect.maxX, by: spacing) {
+                context.move(to: CGPoint(x: x, y: rect.minY))
+                context.addLine(to: CGPoint(x: x, y: rect.maxY))
+            }
+            for y in stride(from: rect.minY, to: rect.maxY, by: spacing) {
+                context.move(to: CGPoint(x: rect.minX, y: y))
+                context.addLine(to: CGPoint(x: rect.maxX, y: y))
+            }
+            context.strokePath()
+
+        case "stars":
+            // Night sky gradient
+            let gradientColors: [CGColor] = [
+                UIColor(red: 0.05, green: 0.05, blue: 0.15, alpha: 1).cgColor,
+                UIColor(red: 0.1, green: 0.1, blue: 0.25, alpha: 1).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 1])!
+            context.drawLinearGradient(gradient, start: rect.origin, end: CGPoint(x: rect.maxX, y: rect.maxY), options: [])
+            // Stars
+            let starColors: [UIColor] = [.white, .yellow, .cyan, .systemPink, .orange]
+            for _ in 0..<50 {
+                let x = CGFloat.random(in: (rect.minX + 10)...(rect.maxX - 10))
+                let y = CGFloat.random(in: (rect.minY + 10)...(rect.maxY - 10))
+                let size: CGFloat = CGFloat.random(in: 6...14)
+                let color = starColors.randomElement()!.withAlphaComponent(CGFloat.random(in: 0.6...1.0))
+                context.setFillColor(color.cgColor)
+                drawStar(at: CGPoint(x: x, y: y), size: size, context: context)
+            }
+
+        case "hearts":
+            // Pink gradient
+            let gradientColors: [CGColor] = [
+                UIColor(red: 1.0, green: 0.9, blue: 0.95, alpha: 1).cgColor,
+                UIColor(red: 1.0, green: 0.8, blue: 0.85, alpha: 1).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 1])!
+            context.drawLinearGradient(gradient, start: CGPoint(x: rect.midX, y: rect.minY), end: CGPoint(x: rect.midX, y: rect.maxY), options: [])
+            // Hearts
+            let heartColors: [UIColor] = [.red, .systemPink, UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1), UIColor(red: 0.9, green: 0.2, blue: 0.4, alpha: 1)]
+            for _ in 0..<30 {
+                let x = CGFloat.random(in: (rect.minX + 10)...(rect.maxX - 10))
+                let y = CGFloat.random(in: (rect.minY + 10)...(rect.maxY - 10))
+                let size: CGFloat = CGFloat.random(in: 12...28)
+                let color = heartColors.randomElement()!.withAlphaComponent(CGFloat.random(in: 0.3...0.7))
+                context.setFillColor(color.cgColor)
+                drawHeart(at: CGPoint(x: x, y: y), size: size, context: context)
+            }
+
+        case "confetti":
+            // Light party background
+            context.setFillColor(UIColor(red: 1.0, green: 0.98, blue: 0.95, alpha: 1).cgColor)
+            context.fill(rect)
+            // Confetti pieces
+            let confettiColors: [UIColor] = [.red, .orange, .yellow, .green, .blue, .purple, .systemPink, .cyan]
+            for _ in 0..<80 {
+                let x = CGFloat.random(in: rect.minX...rect.maxX)
+                let y = CGFloat.random(in: rect.minY...rect.maxY)
+                let w = CGFloat.random(in: 4...10)
+                let h = CGFloat.random(in: 10...20)
+                let rotation = CGFloat.random(in: 0...(2 * .pi))
+                let color = confettiColors.randomElement()!.withAlphaComponent(CGFloat.random(in: 0.6...0.9))
+                context.saveGState()
+                context.translateBy(x: x, y: y)
+                context.rotate(by: rotation)
+                context.setFillColor(color.cgColor)
+                let confettiRect = CGRect(x: -w/2, y: -h/2, width: w, height: h)
+                let confettiPath = UIBezierPath(roundedRect: confettiRect, cornerRadius: 2)
+                context.addPath(confettiPath.cgPath)
+                context.fillPath()
+                context.restoreGState()
+            }
+
+        case "waves":
+            // Ocean gradient
+            let gradientColors: [CGColor] = [
+                UIColor(red: 0.4, green: 0.7, blue: 0.9, alpha: 1).cgColor,
+                UIColor(red: 0.2, green: 0.5, blue: 0.8, alpha: 1).cgColor,
+                UIColor(red: 0.1, green: 0.3, blue: 0.6, alpha: 1).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 0.5, 1])!
+            context.drawLinearGradient(gradient, start: CGPoint(x: rect.midX, y: rect.minY), end: CGPoint(x: rect.midX, y: rect.maxY), options: [])
+            // Waves
+            let waveColors: [UIColor] = [
+                UIColor.white.withAlphaComponent(0.3),
+                UIColor.cyan.withAlphaComponent(0.2),
+                UIColor.white.withAlphaComponent(0.2)
+            ]
+            let spacing: CGFloat = 20
+            var colorIndex = 0
+            for y in stride(from: rect.minY + spacing, to: rect.maxY + 20, by: spacing) {
+                context.setStrokeColor(waveColors[colorIndex % waveColors.count].cgColor)
+                context.setLineWidth(3)
+                context.move(to: CGPoint(x: rect.minX - 10, y: y))
+                for x in stride(from: rect.minX - 10, to: rect.maxX + 10, by: 4) {
+                    let yOffset = sin(x / 20 * .pi + Double(colorIndex)) * 8
+                    context.addLine(to: CGPoint(x: x, y: y + yOffset))
+                }
+                context.strokePath()
+                colorIndex += 1
+            }
+
+        default:
+            break
+        }
+
+        context.restoreGState()
+    }
+
+    // Helper to draw a star shape
+    private static func drawStar(at center: CGPoint, size: CGFloat, context: CGContext) {
+        let path = UIBezierPath()
+        let points = 5
+        for i in 0..<points * 2 {
+            let angle = (Double(i) * .pi / Double(points)) - .pi / 2
+            let radius = i % 2 == 0 ? size : size * 0.4
+            let x = center.x + cos(angle) * radius
+            let y = center.y + sin(angle) * radius
+            if i == 0 { path.move(to: CGPoint(x: x, y: y)) }
+            else { path.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        path.close()
+        context.addPath(path.cgPath)
+        context.fillPath()
+    }
+
+    // Helper to draw a heart shape
+    private static func drawHeart(at center: CGPoint, size: CGFloat, context: CGContext) {
+        let path = UIBezierPath()
+        let s = size * 0.5
+        path.move(to: CGPoint(x: center.x, y: center.y + s))
+        path.addCurve(
+            to: CGPoint(x: center.x - s, y: center.y - s * 0.3),
+            controlPoint1: CGPoint(x: center.x - s * 0.5, y: center.y + s * 0.3),
+            controlPoint2: CGPoint(x: center.x - s, y: center.y + s * 0.2)
+        )
+        path.addArc(withCenter: CGPoint(x: center.x - s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .pi, endAngle: 0, clockwise: false)
+        path.addArc(withCenter: CGPoint(x: center.x + s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .pi, endAngle: 0, clockwise: false)
+        path.addCurve(
+            to: CGPoint(x: center.x, y: center.y + s),
+            controlPoint1: CGPoint(x: center.x + s, y: center.y + s * 0.2),
+            controlPoint2: CGPoint(x: center.x + s * 0.5, y: center.y + s * 0.3)
+        )
+        context.addPath(path.cgPath)
+        context.fillPath()
+    }
+
+    // Check if texture is dark for overlay color
+    private static func isTextureDark(_ texture: String) -> Bool {
+        if texture.hasPrefix("#"), texture.count == 7 {
+            let start = texture.index(texture.startIndex, offsetBy: 1)
+            let hexColor = String(texture[start...])
+            if let rgb = UInt64(hexColor, radix: 16) {
+                let r = CGFloat((rgb >> 16) & 0xFF) / 255.0
+                let g = CGFloat((rgb >> 8) & 0xFF) / 255.0
+                let b = CGFloat(rgb & 0xFF) / 255.0
+                let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+                return luminance < 0.5
+            }
+        }
+        return false
     }
 }
 

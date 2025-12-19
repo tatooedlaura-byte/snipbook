@@ -155,8 +155,17 @@ struct PageDetailView: View {
 
     private func snipsLayout(pageWidth: CGFloat, pageHeight: CGFloat) -> some View {
         let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
-        let maxSnipSize = pageWidth * 0.38
         let spacing: CGFloat = 16
+
+        // Adjust snip size based on count
+        let maxSnipSize: CGFloat
+        if snips.count > 6 {
+            maxSnipSize = pageWidth * 0.28  // 3x3 grid
+        } else if snips.count > 4 {
+            maxSnipSize = pageWidth * 0.30  // 3x2 grid
+        } else {
+            maxSnipSize = pageWidth * 0.38  // 2x2 grid
+        }
 
         return VStack(spacing: 0) {
             // Book title at top
@@ -169,9 +178,58 @@ struct PageDetailView: View {
 
             if snips.isEmpty {
                 emptyPagePlaceholder
-            } else {
+            } else if snips.count > 6 {
+                // 3x3 grid for 7-9 snips
                 VStack(spacing: spacing) {
-                    // Top row
+                    HStack(spacing: spacing) {
+                        snipImage(snips[0], maxSize: maxSnipSize)
+                        snipImage(snips[1], maxSize: maxSnipSize)
+                        snipImage(snips[2], maxSize: maxSnipSize)
+                    }
+                    HStack(spacing: spacing) {
+                        snipImage(snips[3], maxSize: maxSnipSize)
+                        snipImage(snips[4], maxSize: maxSnipSize)
+                        snipImage(snips[5], maxSize: maxSnipSize)
+                    }
+                    HStack(spacing: spacing) {
+                        snipImage(snips[6], maxSize: maxSnipSize)
+                        if snips.count > 7 {
+                            snipImage(snips[7], maxSize: maxSnipSize)
+                        } else {
+                            Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                        }
+                        if snips.count > 8 {
+                            snipImage(snips[8], maxSize: maxSnipSize)
+                        } else {
+                            Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                        }
+                    }
+                }
+            } else if snips.count > 4 {
+                // 3x2 grid for 5-6 snips
+                VStack(spacing: spacing) {
+                    HStack(spacing: spacing) {
+                        snipImage(snips[0], maxSize: maxSnipSize)
+                        snipImage(snips[1], maxSize: maxSnipSize)
+                        snipImage(snips[2], maxSize: maxSnipSize)
+                    }
+                    HStack(spacing: spacing) {
+                        snipImage(snips[3], maxSize: maxSnipSize)
+                        if snips.count > 4 {
+                            snipImage(snips[4], maxSize: maxSnipSize)
+                        } else {
+                            Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                        }
+                        if snips.count > 5 {
+                            snipImage(snips[5], maxSize: maxSnipSize)
+                        } else {
+                            Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                        }
+                    }
+                }
+            } else {
+                // 2x2 grid for 1-4 snips
+                VStack(spacing: spacing) {
                     HStack(spacing: spacing) {
                         if snips.count > 0 {
                             snipImage(snips[0], maxSize: maxSnipSize)
@@ -182,8 +240,6 @@ struct PageDetailView: View {
                             Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                         }
                     }
-
-                    // Bottom row
                     HStack(spacing: spacing) {
                         if snips.count > 2 {
                             snipImage(snips[2], maxSize: maxSnipSize)

@@ -126,6 +126,39 @@ struct PageView: View {
             )
         }
 
+        // 7-9 snips: use 3x3 grid
+        if snips.count > 6 {
+            let maxSnipSize = min(size.width * 0.28, 85)
+            return AnyView(VStack(spacing: spacing) {
+                // Row 1
+                HStack(spacing: spacing) {
+                    SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                }
+                // Row 2
+                HStack(spacing: spacing) {
+                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[4], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    SnipView(snip: snips[5], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                }
+                // Row 3
+                HStack(spacing: spacing) {
+                    SnipView(snip: snips[6], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    if snips.count > 7 {
+                        SnipView(snip: snips[7], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    } else {
+                        Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                    }
+                    if snips.count > 8 {
+                        SnipView(snip: snips[8], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    } else {
+                        Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
+                    }
+                }
+            })
+        }
+
         // 5-6 snips: use 3x2 grid with smaller snips
         if snips.count > 4 {
             let maxSnipSize = min(size.width * 0.28, 100)
