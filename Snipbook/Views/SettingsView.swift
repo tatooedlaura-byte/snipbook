@@ -10,39 +10,11 @@ struct SettingsView: View {
     @State private var showExportSuccess = false
     @State private var showShareSheet = false
     @AppStorage("savePhotosToLibrary") private var savePhotosToLibrary = true
+    @State private var selectedColor: Color = .white
 
-    private let textures = [
-        // Classic
-        ("paper-cream", "Cream"),
-        ("paper-white", "White"),
-        ("paper-kraft", "Kraft"),
-        // Warm & Bright
-        ("paper-butter", "Butter"),
-        ("paper-sunshine", "Sunshine"),
-        ("paper-peach", "Peach"),
-        ("paper-coral", "Coral"),
-        ("paper-blush", "Blush"),
-        ("paper-rose", "Rose"),
-        // Cool & Fresh
-        ("paper-mint", "Mint"),
-        ("paper-seafoam", "Seafoam"),
-        ("paper-aqua", "Aqua"),
-        ("paper-sky", "Sky"),
-        ("paper-periwinkle", "Periwinkle"),
-        ("paper-lavender", "Lavender"),
-        ("paper-lilac", "Lilac"),
-        // Earthy
-        ("paper-sage", "Sage"),
-        ("paper-olive", "Olive"),
-        ("paper-terracotta", "Terracotta"),
-        ("paper-linen", "Linen"),
-        // Neutral
-        ("paper-gray", "Gray"),
-        ("paper-newsprint", "Newsprint"),
-        // Dark
-        ("paper-midnight", "Midnight"),
-        ("paper-charcoal", "Charcoal")
-    ]
+    private func initializeColor() {
+        selectedColor = colorFromHex(book.backgroundTexture) ?? Color(red: 0.98, green: 0.96, blue: 0.93)
+    }
 
     var body: some View {
         NavigationStack {
@@ -82,11 +54,12 @@ struct SettingsView: View {
                     Text("Also save original photos to your photo library when capturing snips")
                 }
 
-                // Background texture section
+                // Background color section
                 Section {
-                    ForEach(textures, id: \.0) { texture, name in
-                        textureRow(texture: texture, name: name)
-                    }
+                    ColorPicker("Background Color", selection: $selectedColor, supportsOpacity: false)
+                        .onChange(of: selectedColor) { _, newColor in
+                            book.backgroundTexture = newColor.toHex()
+                        }
                 } header: {
                     Text("Page Background")
                 }
@@ -159,72 +132,24 @@ struct SettingsView: View {
                     ShareSheet(items: [url])
                 }
             }
-        }
-    }
-
-    // MARK: - Texture Row
-
-    private func textureRow(texture: String, name: String) -> some View {
-        Button {
-            book.backgroundTexture = texture
-        } label: {
-            HStack {
-                // Color preview
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(textureColor(texture))
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-                    )
-
-                Text(name)
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                if book.backgroundTexture == texture {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.accentColor)
-                }
+            .onAppear {
+                initializeColor()
             }
         }
     }
 
-    private func textureColor(_ texture: String) -> Color {
-        switch texture {
-        // Classic
-        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.93)
-        case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
-        case "paper-kraft": return Color(red: 0.82, green: 0.73, blue: 0.62)
-        // Warm & Bright
-        case "paper-butter": return Color(red: 1.0, green: 0.96, blue: 0.76)
-        case "paper-sunshine": return Color(red: 1.0, green: 0.92, blue: 0.55)
-        case "paper-peach": return Color(red: 1.0, green: 0.85, blue: 0.73)
-        case "paper-coral": return Color(red: 1.0, green: 0.75, blue: 0.70)
-        case "paper-blush": return Color(red: 1.0, green: 0.84, blue: 0.84)
-        case "paper-rose": return Color(red: 1.0, green: 0.76, blue: 0.82)
-        // Cool & Fresh
-        case "paper-mint": return Color(red: 0.75, green: 0.95, blue: 0.85)
-        case "paper-seafoam": return Color(red: 0.70, green: 0.92, blue: 0.88)
-        case "paper-aqua": return Color(red: 0.70, green: 0.90, blue: 0.95)
-        case "paper-sky": return Color(red: 0.80, green: 0.90, blue: 1.0)
-        case "paper-periwinkle": return Color(red: 0.80, green: 0.80, blue: 1.0)
-        case "paper-lavender": return Color(red: 0.88, green: 0.82, blue: 0.95)
-        case "paper-lilac": return Color(red: 0.92, green: 0.80, blue: 0.92)
-        // Earthy
-        case "paper-sage": return Color(red: 0.80, green: 0.88, blue: 0.78)
-        case "paper-olive": return Color(red: 0.75, green: 0.78, blue: 0.62)
-        case "paper-terracotta": return Color(red: 0.90, green: 0.70, blue: 0.58)
-        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
-        // Neutral
-        case "paper-gray": return Color(red: 0.92, green: 0.92, blue: 0.92)
-        case "paper-newsprint": return Color(red: 0.91, green: 0.89, blue: 0.86)
-        // Dark
-        case "paper-midnight": return Color(red: 0.15, green: 0.20, blue: 0.28)
-        case "paper-charcoal": return Color(red: 0.25, green: 0.25, blue: 0.27)
-        default: return Color(red: 0.98, green: 0.96, blue: 0.93)
-        }
+    // MARK: - Hex Color Helpers
+
+    private func colorFromHex(_ hex: String) -> Color? {
+        guard hex.hasPrefix("#"), hex.count == 7 else { return nil }
+        let start = hex.index(hex.startIndex, offsetBy: 1)
+        let hexColor = String(hex[start...])
+        guard let rgb = UInt64(hexColor, radix: 16) else { return nil }
+        return Color(
+            red: Double((rgb >> 16) & 0xFF) / 255.0,
+            green: Double((rgb >> 8) & 0xFF) / 255.0,
+            blue: Double(rgb & 0xFF) / 255.0
+        )
     }
 
     // MARK: - PDF Export
@@ -354,41 +279,35 @@ actor PDFExporter {
         }
     }
 
-    // Convert texture name to UIColor for PDF rendering
+    // Convert hex or texture name to UIColor for PDF rendering
     private static func textureToUIColor(_ texture: String) -> UIColor {
-        switch texture {
-        // Classic
-        case "paper-cream": return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
-        case "paper-white": return UIColor(red: 0.99, green: 0.99, blue: 0.99, alpha: 1)
-        case "paper-kraft": return UIColor(red: 0.82, green: 0.73, blue: 0.62, alpha: 1)
-        // Warm & Bright
-        case "paper-butter": return UIColor(red: 1.0, green: 0.96, blue: 0.76, alpha: 1)
-        case "paper-sunshine": return UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 1)
-        case "paper-peach": return UIColor(red: 1.0, green: 0.85, blue: 0.73, alpha: 1)
-        case "paper-coral": return UIColor(red: 1.0, green: 0.75, blue: 0.70, alpha: 1)
-        case "paper-blush": return UIColor(red: 1.0, green: 0.84, blue: 0.84, alpha: 1)
-        case "paper-rose": return UIColor(red: 1.0, green: 0.76, blue: 0.82, alpha: 1)
-        // Cool & Fresh
-        case "paper-mint": return UIColor(red: 0.75, green: 0.95, blue: 0.85, alpha: 1)
-        case "paper-seafoam": return UIColor(red: 0.70, green: 0.92, blue: 0.88, alpha: 1)
-        case "paper-aqua": return UIColor(red: 0.70, green: 0.90, blue: 0.95, alpha: 1)
-        case "paper-sky": return UIColor(red: 0.80, green: 0.90, blue: 1.0, alpha: 1)
-        case "paper-periwinkle": return UIColor(red: 0.80, green: 0.80, blue: 1.0, alpha: 1)
-        case "paper-lavender": return UIColor(red: 0.88, green: 0.82, blue: 0.95, alpha: 1)
-        case "paper-lilac": return UIColor(red: 0.92, green: 0.80, blue: 0.92, alpha: 1)
-        // Earthy
-        case "paper-sage": return UIColor(red: 0.80, green: 0.88, blue: 0.78, alpha: 1)
-        case "paper-olive": return UIColor(red: 0.75, green: 0.78, blue: 0.62, alpha: 1)
-        case "paper-terracotta": return UIColor(red: 0.90, green: 0.70, blue: 0.58, alpha: 1)
-        case "paper-linen": return UIColor(red: 0.95, green: 0.92, blue: 0.88, alpha: 1)
-        // Neutral
-        case "paper-gray": return UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
-        case "paper-newsprint": return UIColor(red: 0.91, green: 0.89, blue: 0.86, alpha: 1)
-        // Dark
-        case "paper-midnight": return UIColor(red: 0.15, green: 0.20, blue: 0.28, alpha: 1)
-        case "paper-charcoal": return UIColor(red: 0.25, green: 0.25, blue: 0.27, alpha: 1)
-        default: return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
+        // Try hex first
+        if texture.hasPrefix("#"), texture.count == 7 {
+            let start = texture.index(texture.startIndex, offsetBy: 1)
+            let hexColor = String(texture[start...])
+            if let rgb = UInt64(hexColor, radix: 16) {
+                return UIColor(
+                    red: CGFloat((rgb >> 16) & 0xFF) / 255.0,
+                    green: CGFloat((rgb >> 8) & 0xFF) / 255.0,
+                    blue: CGFloat(rgb & 0xFF) / 255.0,
+                    alpha: 1
+                )
+            }
         }
+        // Default cream color
+        return UIColor(red: 0.98, green: 0.96, blue: 0.93, alpha: 1)
+    }
+}
+
+// MARK: - Color Hex Extension
+
+extension Color {
+    func toHex() -> String {
+        guard let components = UIColor(self).cgColor.components else { return "#FAF5EE" }
+        let r = Int((components[0] * 255).rounded())
+        let g = Int(((components.count > 1 ? components[1] : components[0]) * 255).rounded())
+        let b = Int(((components.count > 2 ? components[2] : components[0]) * 255).rounded())
+        return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
 

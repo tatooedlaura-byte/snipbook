@@ -276,39 +276,19 @@ struct BookCard: View {
     }
 
     private var backgroundColor: Color {
-        switch book.backgroundTexture {
-        // Classic
-        case "paper-cream": return Color(red: 0.98, green: 0.96, blue: 0.93)
-        case "paper-white": return Color(red: 0.99, green: 0.99, blue: 0.99)
-        case "paper-kraft": return Color(red: 0.82, green: 0.73, blue: 0.62)
-        // Warm & Bright
-        case "paper-butter": return Color(red: 1.0, green: 0.96, blue: 0.76)
-        case "paper-sunshine": return Color(red: 1.0, green: 0.92, blue: 0.55)
-        case "paper-peach": return Color(red: 1.0, green: 0.85, blue: 0.73)
-        case "paper-coral": return Color(red: 1.0, green: 0.75, blue: 0.70)
-        case "paper-blush": return Color(red: 1.0, green: 0.84, blue: 0.84)
-        case "paper-rose": return Color(red: 1.0, green: 0.76, blue: 0.82)
-        // Cool & Fresh
-        case "paper-mint": return Color(red: 0.75, green: 0.95, blue: 0.85)
-        case "paper-seafoam": return Color(red: 0.70, green: 0.92, blue: 0.88)
-        case "paper-aqua": return Color(red: 0.70, green: 0.90, blue: 0.95)
-        case "paper-sky": return Color(red: 0.80, green: 0.90, blue: 1.0)
-        case "paper-periwinkle": return Color(red: 0.80, green: 0.80, blue: 1.0)
-        case "paper-lavender": return Color(red: 0.88, green: 0.82, blue: 0.95)
-        case "paper-lilac": return Color(red: 0.92, green: 0.80, blue: 0.92)
-        // Earthy
-        case "paper-sage": return Color(red: 0.80, green: 0.88, blue: 0.78)
-        case "paper-olive": return Color(red: 0.75, green: 0.78, blue: 0.62)
-        case "paper-terracotta": return Color(red: 0.90, green: 0.70, blue: 0.58)
-        case "paper-linen": return Color(red: 0.95, green: 0.92, blue: 0.88)
-        // Neutral
-        case "paper-gray": return Color(red: 0.92, green: 0.92, blue: 0.92)
-        case "paper-newsprint": return Color(red: 0.91, green: 0.89, blue: 0.86)
-        // Dark
-        case "paper-midnight": return Color(red: 0.15, green: 0.20, blue: 0.28)
-        case "paper-charcoal": return Color(red: 0.25, green: 0.25, blue: 0.27)
-        default: return Color(red: 0.98, green: 0.96, blue: 0.93)
+        let texture = book.backgroundTexture
+        if texture.hasPrefix("#"), texture.count == 7 {
+            let start = texture.index(texture.startIndex, offsetBy: 1)
+            let hexColor = String(texture[start...])
+            if let rgb = UInt64(hexColor, radix: 16) {
+                return Color(
+                    red: Double((rgb >> 16) & 0xFF) / 255.0,
+                    green: Double((rgb >> 8) & 0xFF) / 255.0,
+                    blue: Double(rgb & 0xFF) / 255.0
+                )
+            }
         }
+        return Color(red: 0.98, green: 0.96, blue: 0.93)
     }
 
     private var recentSnips: [Snip] {
