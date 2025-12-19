@@ -51,6 +51,12 @@ struct PageView: View {
     }
 
     private var isDarkTexture: Bool {
+        // Check for dark fun backgrounds
+        let darkPatterns = ["stars", "retro", "waves"]
+        if darkPatterns.contains(backgroundPattern) {
+            return true
+        }
+
         if backgroundTexture.hasPrefix("#"), backgroundTexture.count == 7 {
             let start = backgroundTexture.index(backgroundTexture.startIndex, offsetBy: 1)
             let hexColor = String(backgroundTexture[start...])

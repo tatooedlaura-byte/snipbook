@@ -71,6 +71,13 @@ struct SettingsView: View {
                     Text("Pattern Overlay")
                 }
 
+                // Fun backgrounds section
+                Section {
+                    funPatternGrid
+                } header: {
+                    Text("Fun Backgrounds")
+                }
+
                 // Export section
                 Section {
                     Button(action: exportToPDF) {
@@ -170,36 +177,58 @@ struct SettingsView: View {
         ("paper", "Paper Grain")
     ]
 
+    private let funPatterns = [
+        ("bubbles", "Bubbles"),
+        ("retro", "80s Retro"),
+        ("stars", "Stars"),
+        ("hearts", "Hearts"),
+        ("confetti", "Confetti"),
+        ("waves", "Waves")
+    ]
+
     private var patternGrid: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
             ForEach(patterns, id: \.0) { pattern, name in
-                Button {
-                    book.backgroundPattern = pattern
-                } label: {
-                    VStack(spacing: 6) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(selectedColor)
-                                .frame(width: 60, height: 60)
-
-                            PatternPreview(pattern: pattern)
-                                .frame(width: 60, height: 60)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(book.backgroundPattern == pattern ? Color.accentColor : Color.clear, lineWidth: 2)
-                        )
-
-                        Text(name)
-                            .font(.caption2)
-                            .foregroundColor(.primary)
-                    }
-                }
-                .buttonStyle(.plain)
+                patternButton(pattern: pattern, name: name)
             }
         }
         .padding(.vertical, 8)
+    }
+
+    private var funPatternGrid: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
+            ForEach(funPatterns, id: \.0) { pattern, name in
+                patternButton(pattern: pattern, name: name)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func patternButton(pattern: String, name: String) -> some View {
+        Button {
+            book.backgroundPattern = pattern
+        } label: {
+            VStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(selectedColor)
+                        .frame(width: 60, height: 60)
+
+                    PatternPreview(pattern: pattern)
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(book.backgroundPattern == pattern ? Color.accentColor : Color.clear, lineWidth: 2)
+                )
+
+                Text(name)
+                    .font(.caption2)
+                    .foregroundColor(.primary)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - PDF Export
@@ -424,9 +453,136 @@ struct PatternPreview: View {
                 )
             }
 
+        case "bubbles":
+            // Colorful bubbles preview
+            let colors: [Color] = [.pink, .purple, .blue, .cyan, .mint]
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.95, green: 0.95, blue: 1.0)))
+            for _ in 0..<8 {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let radius = CGFloat.random(in: 4...12)
+                let bubbleColor = colors.randomElement()!.opacity(0.5)
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
+                    with: .color(bubbleColor)
+                )
+            }
+
+        case "retro":
+            // 80s neon preview
+            let gradient = Gradient(colors: [Color(red: 0.2, green: 0.0, blue: 0.3), Color(red: 0.8, green: 0.2, blue: 0.5)])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            let gridColor = Color.cyan.opacity(0.7)
+            for x in stride(from: 0, to: size.width, by: 12) {
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(gridColor), lineWidth: 0.5)
+            }
+            for y in stride(from: 0, to: size.height, by: 12) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(gridColor), lineWidth: 0.5)
+            }
+
+        case "stars":
+            // Night sky preview
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.08, green: 0.08, blue: 0.2)))
+            let starColors: [Color] = [.white, .yellow, .cyan]
+            for _ in 0..<12 {
+                let x = CGFloat.random(in: 3...(size.width - 3))
+                let y = CGFloat.random(in: 3...(size.height - 3))
+                let starSize: CGFloat = CGFloat.random(in: 3...6)
+                let path = starPath(center: CGPoint(x: x, y: y), size: starSize)
+                context.fill(path, with: .color(starColors.randomElement()!))
+            }
+
+        case "hearts":
+            // Pink hearts preview
+            let gradient = Gradient(colors: [Color(red: 1.0, green: 0.9, blue: 0.95), Color(red: 1.0, green: 0.8, blue: 0.88)])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            let heartColors: [Color] = [.red, .pink, Color(red: 1.0, green: 0.4, blue: 0.6)]
+            for _ in 0..<8 {
+                let x = CGFloat.random(in: 5...(size.width - 5))
+                let y = CGFloat.random(in: 5...(size.height - 5))
+                let heartSize: CGFloat = CGFloat.random(in: 6...12)
+                let path = heartPath(center: CGPoint(x: x, y: y), size: heartSize)
+                context.fill(path, with: .color(heartColors.randomElement()!.opacity(0.6)))
+            }
+
+        case "confetti":
+            // Colorful confetti preview
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 1.0, green: 0.98, blue: 0.95)))
+            let confettiColors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink]
+            for _ in 0..<20 {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let w = CGFloat.random(in: 2...4)
+                let h = CGFloat.random(in: 4...8)
+                let rotation = Angle.degrees(Double.random(in: 0...360))
+                var path = Path(roundedRect: CGRect(x: -w/2, y: -h/2, width: w, height: h), cornerRadius: 1)
+                let transform = CGAffineTransform(translationX: x, y: y).rotated(by: rotation.radians)
+                path = path.applying(transform)
+                context.fill(path, with: .color(confettiColors.randomElement()!.opacity(0.8)))
+            }
+
+        case "waves":
+            // Ocean waves preview
+            let gradient = Gradient(colors: [Color(red: 0.4, green: 0.7, blue: 0.9), Color(red: 0.15, green: 0.4, blue: 0.7)])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            for y in stride(from: 8, to: size.height, by: 10) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                for x in stride(from: 0, to: size.width, by: 4) {
+                    let yOffset = sin(x / 8 * .pi) * 3
+                    path.addLine(to: CGPoint(x: x, y: y + yOffset))
+                }
+                context.stroke(path, with: .color(.white.opacity(0.4)), lineWidth: 1.5)
+            }
+
         default:
             break
         }
+    }
+
+    private func starPath(center: CGPoint, size: CGFloat) -> Path {
+        var path = Path()
+        let points = 5
+        for i in 0..<points * 2 {
+            let angle = (Double(i) * .pi / Double(points)) - .pi / 2
+            let radius = i % 2 == 0 ? size : size * 0.4
+            let x = center.x + cos(angle) * radius
+            let y = center.y + sin(angle) * radius
+            if i == 0 { path.move(to: CGPoint(x: x, y: y)) }
+            else { path.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        path.closeSubpath()
+        return path
+    }
+
+    private func heartPath(center: CGPoint, size: CGFloat) -> Path {
+        var path = Path()
+        let s = size * 0.5
+        path.move(to: CGPoint(x: center.x, y: center.y + s))
+        path.addCurve(
+            to: CGPoint(x: center.x - s, y: center.y - s * 0.3),
+            control1: CGPoint(x: center.x - s * 0.5, y: center.y + s * 0.3),
+            control2: CGPoint(x: center.x - s, y: center.y + s * 0.2)
+        )
+        path.addArc(center: CGPoint(x: center.x - s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        path.addArc(center: CGPoint(x: center.x + s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        path.addCurve(
+            to: CGPoint(x: center.x, y: center.y + s),
+            control1: CGPoint(x: center.x + s, y: center.y + s * 0.2),
+            control2: CGPoint(x: center.x + s * 0.5, y: center.y + s * 0.3)
+        )
+        return path
     }
 }
 
@@ -507,9 +663,161 @@ struct PatternOverlay: View {
                 )
             }
 
+        case "bubbles":
+            // Colorful bubbles background
+            let colors: [Color] = [.pink, .purple, .blue, .cyan, .mint, .yellow, .orange]
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.95, green: 0.95, blue: 1.0)))
+            for _ in 0..<35 {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let radius = CGFloat.random(in: 10...35)
+                let bubbleColor = colors.randomElement()!.opacity(0.4)
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
+                    with: .color(bubbleColor)
+                )
+                context.stroke(
+                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
+                    with: .color(bubbleColor.opacity(0.6)),
+                    lineWidth: 2
+                )
+            }
+
+        case "retro":
+            // 80s neon grid with sunset gradient
+            let gradient = Gradient(colors: [
+                Color(red: 0.1, green: 0.0, blue: 0.2),
+                Color(red: 0.3, green: 0.0, blue: 0.3),
+                Color(red: 0.6, green: 0.1, blue: 0.4),
+                Color(red: 0.9, green: 0.3, blue: 0.5)
+            ])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: 0, y: size.height)))
+            // Neon grid
+            let gridColor = Color.cyan.opacity(0.6)
+            let spacing: CGFloat = 25
+            for x in stride(from: 0, to: size.width, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(gridColor), lineWidth: 1)
+            }
+            for y in stride(from: 0, to: size.height, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(gridColor), lineWidth: 1)
+            }
+
+        case "stars":
+            // Night sky with colorful stars
+            let gradient = Gradient(colors: [Color(red: 0.05, green: 0.05, blue: 0.15), Color(red: 0.1, green: 0.1, blue: 0.25)])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
+            let starColors: [Color] = [.white, .yellow, .cyan, .pink, .orange]
+            for _ in 0..<50 {
+                let x = CGFloat.random(in: 10...(size.width - 10))
+                let y = CGFloat.random(in: 10...(size.height - 10))
+                let starSize: CGFloat = CGFloat.random(in: 6...14)
+                let starColor = starColors.randomElement()!.opacity(Double.random(in: 0.6...1.0))
+                let path = starPath(center: CGPoint(x: x, y: y), size: starSize)
+                context.fill(path, with: .color(starColor))
+            }
+
+        case "hearts":
+            // Pink hearts on soft gradient
+            let gradient = Gradient(colors: [Color(red: 1.0, green: 0.9, blue: 0.95), Color(red: 1.0, green: 0.8, blue: 0.85)])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            let heartColors: [Color] = [.red, .pink, Color(red: 1.0, green: 0.4, blue: 0.6), Color(red: 0.9, green: 0.2, blue: 0.4)]
+            for _ in 0..<30 {
+                let x = CGFloat.random(in: 10...(size.width - 10))
+                let y = CGFloat.random(in: 10...(size.height - 10))
+                let heartSize: CGFloat = CGFloat.random(in: 12...28)
+                let heartColor = heartColors.randomElement()!.opacity(Double.random(in: 0.3...0.7))
+                let path = heartPath(center: CGPoint(x: x, y: y), size: heartSize)
+                context.fill(path, with: .color(heartColor))
+            }
+
+        case "confetti":
+            // Party confetti on light background
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 1.0, green: 0.98, blue: 0.95)))
+            let confettiColors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink, .cyan]
+            for _ in 0..<80 {
+                let x = CGFloat.random(in: 0...size.width)
+                let y = CGFloat.random(in: 0...size.height)
+                let w = CGFloat.random(in: 4...10)
+                let h = CGFloat.random(in: 10...20)
+                let rotation = Angle.degrees(Double.random(in: 0...360))
+                var path = Path(roundedRect: CGRect(x: -w/2, y: -h/2, width: w, height: h), cornerRadius: 2)
+                let transform = CGAffineTransform(translationX: x, y: y).rotated(by: rotation.radians)
+                path = path.applying(transform)
+                let confettiColor = confettiColors.randomElement()!.opacity(Double.random(in: 0.6...0.9))
+                context.fill(path, with: .color(confettiColor))
+            }
+
+        case "waves":
+            // Ocean waves gradient
+            let gradient = Gradient(colors: [
+                Color(red: 0.4, green: 0.7, blue: 0.9),
+                Color(red: 0.2, green: 0.5, blue: 0.8),
+                Color(red: 0.1, green: 0.3, blue: 0.6)
+            ])
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                        with: .linearGradient(gradient, startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: 0, y: size.height)))
+            let waveColors: [Color] = [.white.opacity(0.3), .cyan.opacity(0.2), .white.opacity(0.2)]
+            let spacing: CGFloat = 20
+            var colorIndex = 0
+            for y in stride(from: spacing, to: size.height + 20, by: spacing) {
+                var path = Path()
+                path.move(to: CGPoint(x: -10, y: y))
+                for x in stride(from: -10, to: size.width + 10, by: 4) {
+                    let yOffset = sin(x / 20 * .pi + Double(colorIndex)) * 8
+                    path.addLine(to: CGPoint(x: x, y: y + yOffset))
+                }
+                context.stroke(path, with: .color(waveColors[colorIndex % waveColors.count]), lineWidth: 3)
+                colorIndex += 1
+            }
+
         default:
             break
         }
+    }
+
+    private func starPath(center: CGPoint, size: CGFloat) -> Path {
+        var path = Path()
+        let points = 5
+        for i in 0..<points * 2 {
+            let angle = (Double(i) * .pi / Double(points)) - .pi / 2
+            let radius = i % 2 == 0 ? size : size * 0.4
+            let x = center.x + cos(angle) * radius
+            let y = center.y + sin(angle) * radius
+            if i == 0 { path.move(to: CGPoint(x: x, y: y)) }
+            else { path.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        path.closeSubpath()
+        return path
+    }
+
+    private func heartPath(center: CGPoint, size: CGFloat) -> Path {
+        var path = Path()
+        let s = size * 0.5
+        path.move(to: CGPoint(x: center.x, y: center.y + s))
+        path.addCurve(
+            to: CGPoint(x: center.x - s, y: center.y - s * 0.3),
+            control1: CGPoint(x: center.x - s * 0.5, y: center.y + s * 0.3),
+            control2: CGPoint(x: center.x - s, y: center.y + s * 0.2)
+        )
+        path.addArc(center: CGPoint(x: center.x - s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        path.addArc(center: CGPoint(x: center.x + s * 0.5, y: center.y - s * 0.3),
+                    radius: s * 0.5, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        path.addCurve(
+            to: CGPoint(x: center.x, y: center.y + s),
+            control1: CGPoint(x: center.x + s, y: center.y + s * 0.2),
+            control2: CGPoint(x: center.x + s * 0.5, y: center.y + s * 0.3)
+        )
+        return path
     }
 }
 
