@@ -156,20 +156,20 @@ struct CaptureView: View {
             let viewAspect = geo.size.width / geo.size.height
 
             // Calculate base size that fills the view
-            let baseWidth: CGFloat
-            let baseHeight: CGFloat
-            if imageAspect > viewAspect {
-                baseHeight = geo.size.height
-                baseWidth = baseHeight * imageAspect
-            } else {
-                baseWidth = geo.size.width
-                baseHeight = baseWidth / imageAspect
-            }
+            let baseSize: (width: CGFloat, height: CGFloat) = {
+                if imageAspect > viewAspect {
+                    let h = geo.size.height
+                    return (h * imageAspect, h)
+                } else {
+                    let w = geo.size.width
+                    return (w, w / imageAspect)
+                }
+            }()
 
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: baseWidth * imageScale, height: baseHeight * imageScale)
+                .frame(width: baseSize.width * imageScale, height: baseSize.height * imageScale)
                 .offset(imageOffset)
                 .frame(width: geo.size.width, height: geo.size.height)
                 .contentShape(Rectangle())
