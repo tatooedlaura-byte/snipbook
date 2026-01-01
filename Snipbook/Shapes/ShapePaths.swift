@@ -315,31 +315,30 @@ struct ShapePaths {
     }
 
     // MARK: - Polaroid
-    /// Classic polaroid photo shape with thick bottom border for caption area
+    /// Classic polaroid photo shape - just the photo area (frame is added by ImageMaskingService)
     static func polaroid(in rect: CGRect) -> Path {
         let inset: CGFloat = rect.width * 0.05
         let borderWidth: CGFloat = rect.width * 0.04
-        let bottomBorder: CGFloat = rect.height * 0.18  // Thicker bottom for "caption" area
+        let bottomBorder: CGFloat = rect.height * 0.15
         let cornerRadius: CGFloat = rect.width * 0.02
 
         let outerRect = rect.insetBy(dx: inset, dy: inset)
 
         var path = Path()
 
-        // Outer frame (the white polaroid border)
+        // Outer frame
         path.addRoundedRect(in: outerRect, cornerSize: CGSize(width: cornerRadius, height: cornerRadius))
 
-        // Inner photo area (cut out) - leaves border on all sides, thicker at bottom
+        // Inner photo area cutout (using even-odd fill rule, this creates the frame effect)
         let photoRect = CGRect(
             x: outerRect.minX + borderWidth,
             y: outerRect.minY + borderWidth,
             width: outerRect.width - borderWidth * 2,
             height: outerRect.height - borderWidth - bottomBorder
         )
+        path.addRect(photoRect)
 
-        // We want to keep the frame, so just return the outer rounded rect
-        // The "polaroid look" comes from the aspect ratio making the bottom thicker
-        return Path(roundedRect: outerRect, cornerRadius: cornerRadius)
+        return path
     }
 
     // MARK: - Filmstrip
@@ -351,7 +350,7 @@ struct ShapePaths {
         let sprocketWidth: CGFloat = innerRect.width * 0.08
         let sprocketHeight: CGFloat = innerRect.height * 0.06
         let sprocketSpacing: CGFloat = innerRect.height * 0.10
-        let sprocketCornerRadius: CGFloat = sprocketHeight * 0.3
+        let sprocketCornerRadius: CGFloat = 0  // Square holes
         let frameCornerRadius: CGFloat = rect.width * 0.01
 
         var path = Path()

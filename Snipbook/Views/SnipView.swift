@@ -95,11 +95,74 @@ struct SnipDetailView: View {
     @State private var showingDeleteConfirmation = false
     @State private var showingShareSheet = false
 
+    // Zoom and pan state
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            VStack(spacing: 0) {
+            // Image fills most of the screen with pinch-to-zoom
+            if let image = UIImage(data: snip.maskedImageData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .scaleEffect(scale)
+                    .offset(offset)
+                    .frame(maxWidth: UIScreen.main.bounds.width * 0.95,
+                           maxHeight: UIScreen.main.bounds.height * 0.70)
+                    .shadow(color: .white.opacity(0.1), radius: 20)
+                    .gesture(
+                        MagnifyGesture()
+                            .onChanged { value in
+                                let newScale = lastScale * value.magnification
+                                scale = min(max(newScale, 1.0), 5.0)
+                            }
+                            .onEnded { _ in
+                                lastScale = scale
+                                if scale == 1.0 {
+                                    withAnimation(.easeOut(duration: 0.2)) {
+                                        offset = .zero
+                                        lastOffset = .zero
+                                    }
+                                }
+                            }
+                    )
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if scale > 1.0 {
+                                    offset = CGSize(
+                                        width: lastOffset.width + value.translation.width,
+                                        height: lastOffset.height + value.translation.height
+                                    )
+                                }
+                            }
+                            .onEnded { _ in
+                                lastOffset = offset
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            if scale > 1.0 {
+                                // Reset zoom
+                                scale = 1.0
+                                lastScale = 1.0
+                                offset = .zero
+                                lastOffset = .zero
+                            } else {
+                                // Zoom in to 2x
+                                scale = 2.0
+                                lastScale = 2.0
+                            }
+                        }
+                    }
+            }
+
+            VStack {
                 // Top bar with delete, share, and close buttons
                 HStack {
                     Button(action: { showingDeleteConfirmation = true }) {
@@ -123,18 +186,6 @@ struct SnipDetailView: View {
                             .foregroundColor(.white.opacity(0.8))
                             .padding()
                     }
-                }
-
-                Spacer()
-
-                // Image in the middle - large and prominent
-                if let image = UIImage(data: snip.maskedImageData) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: UIScreen.main.bounds.width * 0.9,
-                               maxHeight: UIScreen.main.bounds.height * 0.65)
-                        .shadow(color: .white.opacity(0.1), radius: 20)
                 }
 
                 Spacer()
