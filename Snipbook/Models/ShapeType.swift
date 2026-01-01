@@ -7,6 +7,8 @@ enum ShapeType: String, Codable, CaseIterable, Identifiable {
     case label
     case tornPaper
     case rectangle
+    case polaroid
+    case filmstrip
 
     var id: String { rawValue }
 
@@ -18,6 +20,8 @@ enum ShapeType: String, Codable, CaseIterable, Identifiable {
         case .label: return "Label"
         case .tornPaper: return "Torn"
         case .rectangle: return "Rectangle"
+        case .polaroid: return "Polaroid"
+        case .filmstrip: return "Film"
         }
     }
 
@@ -29,6 +33,8 @@ enum ShapeType: String, Codable, CaseIterable, Identifiable {
         case .label: return "tag"
         case .tornPaper: return "scribble"
         case .rectangle: return "rectangle"
+        case .polaroid: return "photo"
+        case .filmstrip: return "film"
         }
     }
 }

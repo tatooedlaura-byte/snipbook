@@ -93,13 +93,14 @@ struct SnipDetailView: View {
     @State private var isEditingName = false
     @State private var editedName = ""
     @State private var showingDeleteConfirmation = false
+    @State private var showingShareSheet = false
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Top bar with delete and close buttons
+                // Top bar with delete, share, and close buttons
                 HStack {
                     Button(action: { showingDeleteConfirmation = true }) {
                         Image(systemName: "trash.circle.fill")
@@ -107,6 +108,14 @@ struct SnipDetailView: View {
                             .foregroundColor(.red.opacity(0.8))
                             .padding()
                     }
+
+                    Button(action: { showingShareSheet = true }) {
+                        Image(systemName: "square.and.arrow.up.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(.vertical)
+                    }
+
                     Spacer()
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
@@ -191,7 +200,24 @@ struct SnipDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .sheet(isPresented: $showingShareSheet) {
+            if let image = UIImage(data: snip.maskedImageData) {
+                ShareSheet(items: [image])
+            }
+        }
     }
+}
+
+/// UIKit wrapper for share sheet
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

@@ -14,13 +14,14 @@ final class ImageMaskingService {
     /// - Parameters:
     ///   - image: The source image to mask
     ///   - shapeType: The shape to use for masking
+    ///   - rotation: Rotation in degrees (0, 90, 180, 270)
     ///   - outputSize: Desired output size (default 800x800)
     /// - Returns: PNG data with transparency, or nil if masking fails
-    func maskImage(_ image: UIImage, with shapeType: ShapeType, outputSize: CGSize = CGSize(width: 800, height: 800)) -> Data? {
+    func maskImage(_ image: UIImage, with shapeType: ShapeType, rotation: Double = 0, outputSize: CGSize = CGSize(width: 800, height: 800)) -> Data? {
 
         // Calculate the shape's aspect ratio for proper sizing
         let aspectRatio = shapeAspectRatio(for: shapeType)
-        let shapeSize: CGSize
+        var shapeSize: CGSize
 
         if aspectRatio >= 1.0 {
             // Taller than wide
@@ -30,8 +31,15 @@ final class ImageMaskingService {
             shapeSize = CGSize(width: outputSize.height / aspectRatio, height: outputSize.height)
         }
 
-        // Create the mask path
-        let shapeRect = CGRect(origin: .zero, size: shapeSize)
+        // Swap dimensions if rotated 90 or 270 degrees
+        let isRotated90 = Int(rotation) % 180 == 90
+        if isRotated90 {
+            shapeSize = CGSize(width: shapeSize.height, height: shapeSize.width)
+        }
+
+        // Create the mask path (in original orientation)
+        let originalShapeSize = isRotated90 ? CGSize(width: shapeSize.height, height: shapeSize.width) : shapeSize
+        let shapeRect = CGRect(origin: .zero, size: originalShapeSize)
         let path = ShapePaths.path(for: shapeType, in: shapeRect)
 
         // Use UIKit drawing which handles orientation correctly
@@ -42,6 +50,13 @@ final class ImageMaskingService {
         let renderer = UIGraphicsImageRenderer(size: shapeSize, format: format)
 
         let maskedImage = renderer.image { context in
+            let cgContext = context.cgContext
+
+            // Move to center, rotate, move back
+            cgContext.translateBy(x: shapeSize.width / 2, y: shapeSize.height / 2)
+            cgContext.rotate(by: rotation * .pi / 180)
+            cgContext.translateBy(x: -originalShapeSize.width / 2, y: -originalShapeSize.height / 2)
+
             // Create clipping path
             let uiPath = UIBezierPath(cgPath: path.cgPath)
             uiPath.addClip()
@@ -75,6 +90,8 @@ final class ImageMaskingService {
         case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
+        case .polaroid: return 1.2
+        case .filmstrip: return 1.5
         }
     }
 
@@ -105,12 +122,15 @@ final class ImageMaskingService {
 
 // MARK: - UIImage Extension for convenience
 extension UIImage {
-    func masked(with shapeType: ShapeType) -> Data? {
-        ImageMaskingService.shared.maskImage(self.normalizedOrientation(), with: shapeType)
+    func masked(with shapeType: ShapeType, rotation: Double = 0) -> Data? {
+        ImageMaskingService.shared.maskImage(self.normalizedOrientation(), with: shapeType, rotation: rotation)
     }
 
-    func maskedPreview(with shapeType: ShapeType) -> UIImage? {
-        ImageMaskingService.shared.previewMask(self.normalizedOrientation(), with: shapeType)
+    func maskedPreview(with shapeType: ShapeType, rotation: Double = 0) -> UIImage? {
+        guard let data = ImageMaskingService.shared.maskImage(self.normalizedOrientation(), with: shapeType, rotation: rotation, outputSize: CGSize(width: 400, height: 400)) else {
+            return nil
+        }
+        return UIImage(data: data)
     }
 
     /// Fixes image orientation by redrawing to .up orientation

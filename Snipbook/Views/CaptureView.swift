@@ -24,6 +24,9 @@ struct CaptureView: View {
     // Camera zoom state
     @State private var lastCameraZoom: CGFloat = 1.0
 
+    // Shape rotation state (0, 90, 180, 270 degrees)
+    @State private var shapeRotation: Double = 0
+
     private var isCaptureEnabled: Bool {
         if importedImage != nil {
             return true
@@ -149,14 +152,27 @@ struct CaptureView: View {
 
     private func importedImageView(_ image: UIImage) -> some View {
         GeometryReader { geo in
+            let imageAspect = image.size.width / image.size.height
+            let viewAspect = geo.size.width / geo.size.height
+
+            // Calculate base size that fills the view
+            let baseWidth: CGFloat
+            let baseHeight: CGFloat
+            if imageAspect > viewAspect {
+                baseHeight = geo.size.height
+                baseWidth = baseHeight * imageAspect
+            } else {
+                baseWidth = geo.size.width
+                baseHeight = baseWidth / imageAspect
+            }
+
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: geo.size.width * imageScale, height: geo.size.height * imageScale)
+                .frame(width: baseWidth * imageScale, height: baseHeight * imageScale)
                 .offset(imageOffset)
                 .frame(width: geo.size.width, height: geo.size.height)
                 .contentShape(Rectangle())
-                .clipped()
         }
         .gesture(
             DragGesture()
@@ -174,12 +190,22 @@ struct CaptureView: View {
             MagnifyGesture()
                 .onChanged { value in
                     let newScale = lastScale * value.magnification
-                    imageScale = min(max(newScale, 1.0), 5.0)
+                    // Allow zooming out to 0.3x and in to 5x
+                    imageScale = min(max(newScale, 0.3), 5.0)
                 }
                 .onEnded { _ in
                     lastScale = imageScale
                 }
         )
+        .onTapGesture(count: 2) {
+            // Double-tap to reset zoom and pan
+            withAnimation(.easeOut(duration: 0.25)) {
+                imageScale = 1.0
+                imageOffset = .zero
+                lastScale = 1.0
+                lastOffset = .zero
+            }
+        }
         .ignoresSafeArea()
     }
 
@@ -199,6 +225,7 @@ struct CaptureView: View {
                             Rectangle()
                             SnipShape(shapeType: selectedShape)
                                 .frame(width: size, height: size * aspectRatio)
+                                .rotationEffect(.degrees(shapeRotation))
                                 .blendMode(.destinationOut)
                         }
                         .compositingGroup()
@@ -208,6 +235,7 @@ struct CaptureView: View {
                 SnipShape(shapeType: selectedShape)
                     .stroke(Color.white, lineWidth: 2)
                     .frame(width: size, height: size * aspectRatio)
+                    .rotationEffect(.degrees(shapeRotation))
             }
         }
         .ignoresSafeArea()
@@ -221,6 +249,8 @@ struct CaptureView: View {
         case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
+        case .polaroid: return 1.2      // Classic polaroid ratio with bottom caption area
+        case .filmstrip: return 1.5     // Vertical film frame
         }
     }
 
@@ -252,16 +282,32 @@ struct CaptureView: View {
 
             Spacer()
 
-            Button(action: { cameraService.switchCamera() }) {
-                Image(systemName: "camera.rotate")
+            // Rotate shape button
+            Button(action: rotateShape) {
+                Image(systemName: "rotate.right")
                     .font(.title2)
                     .foregroundColor(.white)
                     .padding(12)
                     .background(Circle().fill(Color.black.opacity(0.5)))
             }
-            .opacity(importedImage == nil ? 1 : 0)
+
+            if importedImage == nil {
+                Button(action: { cameraService.switchCamera() }) {
+                    Image(systemName: "camera.rotate")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding(12)
+                        .background(Circle().fill(Color.black.opacity(0.5)))
+                }
+            }
         }
         .padding(.top, 20)
+    }
+
+    private func rotateShape() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            shapeRotation = (shapeRotation + 90).truncatingRemainder(dividingBy: 360)
+        }
     }
 
     // MARK: - Bottom Controls
@@ -377,6 +423,7 @@ struct CaptureView: View {
 
         let currentOffset = imageOffset
         let currentScale = imageScale
+        let currentRotation = shapeRotation
 
         DispatchQueue.global(qos: .userInitiated).async {
             // Apply crop based on pan/zoom if it's an imported image
@@ -387,7 +434,7 @@ struct CaptureView: View {
                 imageToMask = image
             }
 
-            guard let maskedData = imageToMask.masked(with: selectedShape) else {
+            guard let maskedData = imageToMask.masked(with: selectedShape, rotation: currentRotation) else {
                 DispatchQueue.main.async {
                     isProcessing = false
                 }

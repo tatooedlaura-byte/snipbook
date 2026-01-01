@@ -495,6 +495,8 @@ actor PDFExporter {
     private static func drawFunBackground(in rect: CGRect, pattern: String, context: CGContext) {
         context.saveGState()
         context.clip(to: rect)
+        // Apply 50% transparency to fun backgrounds for subtler look
+        context.setAlpha(0.5)
 
         switch pattern {
         case "bubbles":
@@ -700,10 +702,14 @@ actor PDFExporter {
 struct PatternPreview: View {
     let pattern: String
 
+    // Fun backgrounds that should be more subtle
+    private let funBackgrounds = ["bubbles", "retro", "stars", "hearts", "confetti", "waves"]
+
     var body: some View {
         Canvas { context, size in
             drawPattern(context: context, size: size, pattern: pattern)
         }
+        .opacity(funBackgrounds.contains(pattern) ? 0.5 : 1.0)
     }
 
     private func drawPattern(context: GraphicsContext, size: CGSize, pattern: String) {
@@ -909,10 +915,14 @@ struct PatternOverlay: View {
     let pattern: String
     let isDark: Bool
 
+    // Fun backgrounds that should be more subtle
+    private let funBackgrounds = ["bubbles", "retro", "stars", "hearts", "confetti", "waves"]
+
     var body: some View {
         Canvas { context, size in
             drawPattern(context: context, size: size)
         }
+        .opacity(funBackgrounds.contains(pattern) ? 0.5 : 1.0)
     }
 
     private func drawPattern(context: GraphicsContext, size: CGSize) {
