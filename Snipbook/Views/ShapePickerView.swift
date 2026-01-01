@@ -114,8 +114,7 @@ struct ShapePickerView: View {
         case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
-        case .polaroid: return 1.2
-        case .filmstrip: return 1.5
+        case .polaroid: return 1.25
         }
     }
 }

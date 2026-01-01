@@ -249,8 +249,7 @@ struct CaptureView: View {
         case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
-        case .polaroid: return 1.2      // Classic polaroid ratio with bottom caption area
-        case .filmstrip: return 1.5     // Vertical film frame
+        case .polaroid: return 1.25     // Classic polaroid ratio with thick bottom
         }
     }
 

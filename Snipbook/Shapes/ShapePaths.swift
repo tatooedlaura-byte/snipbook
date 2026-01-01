@@ -319,7 +319,7 @@ struct ShapePaths {
     static func polaroid(in rect: CGRect) -> Path {
         let inset: CGFloat = rect.width * 0.05
         let borderWidth: CGFloat = rect.width * 0.04
-        let bottomBorder: CGFloat = rect.height * 0.15
+        let bottomBorder: CGFloat = rect.height * 0.20  // Thicker bottom for classic look
         let cornerRadius: CGFloat = rect.width * 0.02
 
         let outerRect = rect.insetBy(dx: inset, dy: inset)
@@ -341,52 +341,6 @@ struct ShapePaths {
         return path
     }
 
-    // MARK: - Filmstrip
-    /// Filmstrip shape with sprocket holes on sides
-    static func filmstrip(in rect: CGRect) -> Path {
-        let inset: CGFloat = rect.width * 0.03
-        let innerRect = rect.insetBy(dx: inset, dy: inset)
-
-        let sprocketWidth: CGFloat = innerRect.width * 0.08
-        let sprocketHeight: CGFloat = innerRect.height * 0.06
-        let sprocketSpacing: CGFloat = innerRect.height * 0.10
-        let sprocketCornerRadius: CGFloat = 0  // Square holes
-        let frameCornerRadius: CGFloat = rect.width * 0.01
-
-        var path = Path()
-
-        // Main frame
-        path.addRoundedRect(in: innerRect, cornerSize: CGSize(width: frameCornerRadius, height: frameCornerRadius))
-
-        // Left sprocket holes
-        var y = innerRect.minY + sprocketSpacing
-        while y + sprocketHeight < innerRect.maxY - sprocketSpacing / 2 {
-            let sprocketRect = CGRect(
-                x: innerRect.minX + sprocketWidth * 0.3,
-                y: y,
-                width: sprocketWidth,
-                height: sprocketHeight
-            )
-            path.addRoundedRect(in: sprocketRect, cornerSize: CGSize(width: sprocketCornerRadius, height: sprocketCornerRadius))
-            y += sprocketSpacing + sprocketHeight
-        }
-
-        // Right sprocket holes
-        y = innerRect.minY + sprocketSpacing
-        while y + sprocketHeight < innerRect.maxY - sprocketSpacing / 2 {
-            let sprocketRect = CGRect(
-                x: innerRect.maxX - sprocketWidth - sprocketWidth * 0.3,
-                y: y,
-                width: sprocketWidth,
-                height: sprocketHeight
-            )
-            path.addRoundedRect(in: sprocketRect, cornerSize: CGSize(width: sprocketCornerRadius, height: sprocketCornerRadius))
-            y += sprocketSpacing + sprocketHeight
-        }
-
-        return path
-    }
-
     // MARK: - Get Path for Shape Type
     static func path(for shapeType: ShapeType, in rect: CGRect) -> Path {
         switch shapeType {
@@ -397,7 +351,6 @@ struct ShapePaths {
         case .tornPaper: return tornPaper(in: rect)
         case .rectangle: return rectangle(in: rect)
         case .polaroid: return polaroid(in: rect)
-        case .filmstrip: return filmstrip(in: rect)
         }
     }
 }

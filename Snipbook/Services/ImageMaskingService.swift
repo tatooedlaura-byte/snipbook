@@ -24,10 +24,6 @@ final class ImageMaskingService {
             return maskPolaroid(image, rotation: rotation, outputSize: outputSize)
         }
 
-        // Handle Filmstrip specially - it needs sprocket holes
-        if shapeType == .filmstrip {
-            return maskFilmstrip(image, rotation: rotation, outputSize: outputSize)
-        }
 
         // Calculate the shape's aspect ratio for proper sizing
         let aspectRatio = shapeAspectRatio(for: shapeType)
@@ -86,10 +82,10 @@ final class ImageMaskingService {
     private func maskPolaroid(_ image: UIImage, rotation: Double = 0, outputSize: CGSize) -> Data? {
         // Polaroid dimensions
         let frameWidth = outputSize.width
-        let frameHeight = frameWidth * 1.2  // Slightly taller than wide
+        let frameHeight = frameWidth * 1.25  // Taller to accommodate thick bottom
 
         let borderWidth = frameWidth * 0.04
-        let bottomBorder = frameHeight * 0.15  // Thick bottom strip
+        let bottomBorder = frameHeight * 0.20  // Thicker bottom strip for classic look
         let cornerRadius = frameWidth * 0.02
 
         // Photo area inside the frame
@@ -142,88 +138,6 @@ final class ImageMaskingService {
         return polaroidImage.pngData()
     }
 
-    /// Special handling for Filmstrip - creates film frame with sprocket holes
-    private func maskFilmstrip(_ image: UIImage, rotation: Double = 0, outputSize: CGSize) -> Data? {
-        // Filmstrip dimensions - vertical format
-        let frameWidth = outputSize.width
-        let frameHeight = frameWidth * 1.5
-
-        let sprocketMargin = frameWidth * 0.08  // Width of sprocket strip on each side
-        let sprocketWidth = frameWidth * 0.05
-        let sprocketHeight = frameHeight * 0.04
-        let sprocketSpacing = frameHeight * 0.08
-        let sprocketCornerRadius: CGFloat = 0  // Square holes
-        let frameCornerRadius = frameWidth * 0.02
-
-        // Photo area (between the sprocket strips)
-        let photoRect = CGRect(
-            x: sprocketMargin,
-            y: sprocketMargin * 0.5,
-            width: frameWidth - sprocketMargin * 2,
-            height: frameHeight - sprocketMargin
-        )
-
-        // Swap dimensions if rotated 90 or 270
-        let isRotated90 = Int(rotation) % 180 == 90
-        let finalSize = isRotated90 ? CGSize(width: frameHeight, height: frameWidth) : CGSize(width: frameWidth, height: frameHeight)
-
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        format.opaque = false
-
-        let renderer = UIGraphicsImageRenderer(size: finalSize, format: format)
-
-        let filmstripImage = renderer.image { context in
-            let cgContext = context.cgContext
-
-            // Apply rotation
-            cgContext.translateBy(x: finalSize.width / 2, y: finalSize.height / 2)
-            cgContext.rotate(by: rotation * .pi / 180)
-            cgContext.translateBy(x: -frameWidth / 2, y: -frameHeight / 2)
-
-            // Draw dark film frame background
-            let frameRect = CGRect(origin: .zero, size: CGSize(width: frameWidth, height: frameHeight))
-            let framePath = UIBezierPath(roundedRect: frameRect, cornerRadius: frameCornerRadius)
-            UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1.0).setFill()
-            framePath.fill()
-
-            // Draw photo in the center area
-            cgContext.saveGState()
-            let photoPath = UIBezierPath(rect: photoRect)
-            photoPath.addClip()
-            let imageRect = aspectFillRect(for: image.size, in: photoRect)
-            image.draw(in: imageRect)
-            cgContext.restoreGState()
-
-            // Cut out sprocket holes on left side (make them transparent)
-            cgContext.setBlendMode(.clear)
-            var y = sprocketSpacing
-            while y + sprocketHeight < frameHeight - sprocketSpacing / 2 {
-                let leftHole = CGRect(
-                    x: (sprocketMargin - sprocketWidth) / 2,
-                    y: y,
-                    width: sprocketWidth,
-                    height: sprocketHeight
-                )
-                let leftPath = UIBezierPath(roundedRect: leftHole, cornerRadius: sprocketCornerRadius)
-                leftPath.fill()
-
-                let rightHole = CGRect(
-                    x: frameWidth - (sprocketMargin + sprocketWidth) / 2,
-                    y: y,
-                    width: sprocketWidth,
-                    height: sprocketHeight
-                )
-                let rightPath = UIBezierPath(roundedRect: rightHole, cornerRadius: sprocketCornerRadius)
-                rightPath.fill()
-
-                y += sprocketSpacing + sprocketHeight
-            }
-        }
-
-        return filmstripImage.pngData()
-    }
-
     /// Quick preview of masking (lower resolution for UI feedback)
     func previewMask(_ image: UIImage, with shapeType: ShapeType) -> UIImage? {
         guard let data = maskImage(image, with: shapeType, outputSize: CGSize(width: 400, height: 400)) else {
@@ -242,8 +156,7 @@ final class ImageMaskingService {
         case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
-        case .polaroid: return 1.2
-        case .filmstrip: return 1.5
+        case .polaroid: return 1.25
         }
     }
 
