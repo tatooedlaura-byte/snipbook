@@ -245,8 +245,6 @@ struct CaptureView: View {
         switch selectedShape {
         case .postageStamp: return 1.2
         case .circle: return 1.0
-        case .ticket: return 0.5
-        case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
         case .polaroid: return 1.25     // Classic polaroid ratio with thick bottom

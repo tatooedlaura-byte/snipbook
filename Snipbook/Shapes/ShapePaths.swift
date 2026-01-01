@@ -346,8 +346,6 @@ struct ShapePaths {
         switch shapeType {
         case .postageStamp: return postageStamp(in: rect)
         case .circle: return circle(in: rect)
-        case .ticket: return ticket(in: rect)
-        case .label: return label(in: rect)
         case .tornPaper: return tornPaper(in: rect)
         case .rectangle: return rectangle(in: rect)
         case .polaroid: return polaroid(in: rect)

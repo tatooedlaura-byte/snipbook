@@ -15,40 +15,17 @@ struct ShapePickerView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
-                // Header
-                VStack(spacing: 8) {
-                    Text("Choose a shape")
-                        .font(.title2.weight(.medium))
-
-                    Text("This will be your snip's outline")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 24)
-
+            VStack(spacing: 24) {
                 // Shape grid
-                LazyVGrid(columns: columns, spacing: 20) {
+                LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(ShapeType.allCases) { shape in
                         shapeButton(for: shape)
                     }
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
 
                 Spacer()
-
-                // Continue button
-                Button(action: onContinue) {
-                    Text("Continue")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.accentColor)
-                        .cornerRadius(16)
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -59,7 +36,7 @@ struct ShapePickerView: View {
                 }
             }
         }
-        .presentationDetents([.large])
+        .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
     }
 
@@ -70,17 +47,19 @@ struct ShapePickerView: View {
 
         return Button {
             selectedShape = shape
-            onContinue()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                onContinue()
+            }
         } label: {
             VStack(spacing: 12) {
                 // Shape preview
                 SnipShape(shapeType: shape)
                     .stroke(
                         isSelected ? Color.accentColor : Color.primary.opacity(0.4),
-                        lineWidth: isSelected ? 2.5 : 1.5
+                        lineWidth: isSelected ? 2 : 1.5
                     )
-                    .frame(width: 70, height: 70 * aspectRatio(for: shape))
-                    .frame(height: 85)
+                    .frame(width: 60, height: 60 * aspectRatio(for: shape))
+                    .frame(height: 75)
 
                 // Label
                 Text(shape.displayName)
@@ -89,7 +68,7 @@ struct ShapePickerView: View {
                     .foregroundColor(isSelected ? .accentColor : .secondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemBackground).opacity(0.01))
@@ -110,8 +89,6 @@ struct ShapePickerView: View {
         switch shape {
         case .postageStamp: return 1.2
         case .circle: return 1.0
-        case .ticket: return 0.5
-        case .label: return 0.45
         case .tornPaper: return 1.1
         case .rectangle: return 0.75
         case .polaroid: return 1.25
