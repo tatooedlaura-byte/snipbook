@@ -226,30 +226,8 @@ struct BookCard: View {
                     .fill(backgroundColor)
                     .frame(height: 140)
 
-                if book.snipCount > 0 {
-                    // Show preview of recent snips
-                    HStack(spacing: 8) {
-                        ForEach(recentSnips.prefix(3), id: \.id) { snip in
-                            if let image = UIImage(data: snip.maskedImageData) {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(maxWidth: 80, maxHeight: 100)
-                                    .shadow(color: .black.opacity(0.1), radius: 2, x: 1, y: 2)
-                            }
-                        }
-                    }
-                    .padding()
-                } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "book.closed")
-                            .font(.title)
-                            .foregroundColor(.secondary.opacity(0.5))
-                        Text("Empty")
-                            .font(.caption)
-                            .foregroundColor(.secondary.opacity(0.5))
-                    }
-                }
+                // Cover display based on coverType
+                coverContent
             }
 
             // Book info
@@ -294,6 +272,69 @@ struct BookCard: View {
         book.sortedPages
             .flatMap { $0.snips }
             .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    @ViewBuilder
+    private var coverContent: some View {
+        switch book.coverType {
+        case "snip":
+            // Single snip as cover
+            if let snip = book.coverSnip,
+               let image = UIImage(data: snip.maskedImageData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 120)
+                    .shadow(color: .black.opacity(0.15), radius: 4, x: 1, y: 2)
+            } else {
+                // Fallback to auto if no snip selected
+                autoCoverContent
+            }
+
+        case "custom":
+            // Custom uploaded image
+            if let data = book.customCoverData,
+               let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                // Fallback to auto if no custom image
+                autoCoverContent
+            }
+
+        default: // "auto"
+            autoCoverContent
+        }
+    }
+
+    @ViewBuilder
+    private var autoCoverContent: some View {
+        if book.snipCount > 0 {
+            HStack(spacing: 8) {
+                ForEach(recentSnips.prefix(3), id: \.id) { snip in
+                    if let image = UIImage(data: snip.maskedImageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: 80, maxHeight: 100)
+                            .shadow(color: .black.opacity(0.1), radius: 2, x: 1, y: 2)
+                    }
+                }
+            }
+            .padding()
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: "book.closed")
+                    .font(.title)
+                    .foregroundColor(.secondary.opacity(0.5))
+                Text("Empty")
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+        }
     }
 }
 

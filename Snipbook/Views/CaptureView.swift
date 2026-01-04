@@ -6,6 +6,7 @@ struct CaptureView: View {
     let selectedShape: ShapeType
     let onCapture: (Data) -> Void
     let onCancel: () -> Void
+    var isEditMode: Bool = false  // When true, auto-opens photo picker
 
     @StateObject private var cameraService = CameraService()
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -71,6 +72,12 @@ struct CaptureView: View {
         }
         .onAppear {
             cameraService.startSession()
+            // In edit mode, auto-open photo picker since we don't store originals
+            if isEditMode {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showingPhotosPicker = true
+                }
+            }
         }
         .onDisappear {
             cameraService.stopSession()
@@ -390,7 +397,7 @@ struct CaptureView: View {
                             .foregroundColor(Color.gray.opacity(0.3))
                     )
 
-                Text("Added to book!")
+                Text(isEditMode ? "Shape updated!" : "Added to book!")
                     .font(.headline)
                     .foregroundColor(.white)
             }

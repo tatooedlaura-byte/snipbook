@@ -16,6 +16,9 @@ final class Snip {
     // User-editable name
     var name: String?
 
+    // Order within page (for drag-and-drop reordering)
+    var orderIndex: Int = 0
+
     @Relationship(inverse: \Page.snips) var page: Page?
 
     var shapeType: ShapeType {

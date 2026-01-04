@@ -1,5 +1,6 @@
 import SwiftUI
 import PDFKit
+import PhotosUI
 
 /// Minimal settings screen
 struct SettingsView: View {
@@ -11,6 +12,8 @@ struct SettingsView: View {
     @State private var showShareSheet = false
     @AppStorage("savePhotosToLibrary") private var savePhotosToLibrary = true
     @State private var selectedColor: Color = .white
+    @State private var showCoverPicker = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
 
     private func initializeColor() {
         selectedColor = colorFromHex(book.backgroundTexture) ?? Color(red: 0.98, green: 0.96, blue: 0.93)
@@ -69,6 +72,48 @@ struct SettingsView: View {
                         .onChange(of: book.snipsPerPage) { _, _ in
                             book.rebalancePages()
                         }
+                }
+
+                // Cover section
+                Section {
+                    Picker("Cover Type", selection: $book.coverType) {
+                        Text("Auto").tag("auto")
+                        Text("Choose Snip").tag("snip")
+                        Text("Custom Image").tag("custom")
+                    }
+                    .pickerStyle(.segmented)
+
+                    // Cover preview
+                    coverPreview
+
+                    // Actions based on cover type
+                    if book.coverType == "snip" {
+                        Button("Choose Snip for Cover") {
+                            showCoverPicker = true
+                        }
+                        .disabled(book.snipCount == 0)
+                    } else if book.coverType == "custom" {
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            Label("Choose Photo", systemImage: "photo")
+                        }
+                        .onChange(of: selectedPhotoItem) { _, newItem in
+                            Task {
+                                if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                    book.customCoverData = data
+                                }
+                            }
+                        }
+
+                        if book.customCoverData != nil {
+                            Button("Remove Custom Cover", role: .destructive) {
+                                book.customCoverData = nil
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Book Cover")
+                } footer: {
+                    Text("Choose how your book appears in the library")
                 }
 
                 // Background color section
@@ -166,7 +211,85 @@ struct SettingsView: View {
             .onAppear {
                 initializeColor()
             }
+            .sheet(isPresented: $showCoverPicker) {
+                CoverPickerView(book: book)
+            }
         }
+    }
+
+    // MARK: - Cover Preview
+
+    private var coverPreview: some View {
+        HStack {
+            Spacer()
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 100, height: 80)
+
+                switch book.coverType {
+                case "snip":
+                    if let snip = book.coverSnip,
+                       let image = UIImage(data: snip.maskedImageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 70)
+                    } else {
+                        VStack(spacing: 4) {
+                            Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                            Text("No snip selected")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                case "custom":
+                    if let data = book.customCoverData,
+                       let image = UIImage(data: data) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } else {
+                        VStack(spacing: 4) {
+                            Image(systemName: "photo.badge.plus")
+                                .foregroundColor(.secondary)
+                            Text("No image")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                default: // "auto"
+                    let recentSnips = book.allSnips.prefix(3)
+                    if recentSnips.isEmpty {
+                        VStack(spacing: 4) {
+                            Image(systemName: "book.closed")
+                                .foregroundColor(.secondary)
+                            Text("Auto")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        HStack(spacing: 4) {
+                            ForEach(Array(recentSnips), id: \.id) { snip in
+                                if let image = UIImage(data: snip.maskedImageData) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(maxWidth: 28, maxHeight: 50)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer()
+        }
+        .padding(.vertical, 8)
     }
 
     // MARK: - Hex Color Helpers

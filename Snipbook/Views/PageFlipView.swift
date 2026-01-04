@@ -53,13 +53,14 @@ struct PageFlipView: UIViewControllerRepresentable {
 
         func viewController(for index: Int) -> UIHostingController<AnyView> {
             let page = parent.pages[index]
-            // Use existing PageView exactly as-is
+            // Use existing PageView - reordering disabled in flip view
             let view = PageView(
                 page: page,
                 pageNumber: index + 1,
                 backgroundTexture: parent.backgroundTexture,
                 backgroundPattern: parent.backgroundPattern,
-                bookTitle: parent.bookTitle
+                bookTitle: parent.bookTitle,
+                isReordering: .constant(false)
             )
             let vc = UIHostingController(rootView: AnyView(view))
             vc.view.backgroundColor = .clear

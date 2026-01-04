@@ -13,6 +13,8 @@ struct PageDetailView: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
+    @State private var isReordering = false
+    @State private var draggingSnip: Snip?
 
     var body: some View {
         GeometryReader { geometry in
@@ -68,10 +70,38 @@ struct PageDetailView: View {
                         }
                     }
 
-                // Close button
+                // Top bar with close and reorder buttons
                 VStack {
                     HStack {
+                        // Reorder toggle button
+                        if page.snips.count > 1 {
+                            Button(action: {
+                                withAnimation {
+                                    isReordering.toggle()
+                                    // Reset zoom when entering reorder mode
+                                    if isReordering {
+                                        scale = 1.0
+                                        lastScale = 1.0
+                                        offset = .zero
+                                        lastOffset = .zero
+                                    }
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: isReordering ? "checkmark.circle.fill" : "arrow.up.arrow.down.circle.fill")
+                                    if isReordering {
+                                        Text("Done")
+                                            .font(.subheadline)
+                                    }
+                                }
+                                .font(.title2)
+                                .foregroundColor(isReordering ? .green : .white.opacity(0.8))
+                                .padding()
+                            }
+                        }
+
                         Spacer()
+
                         Button(action: { dismiss() }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title)
@@ -82,10 +112,10 @@ struct PageDetailView: View {
                     Spacer()
                 }
 
-                // Instructions hint (shows briefly)
+                // Instructions hint
                 VStack {
                     Spacer()
-                    Text("Pinch to zoom • Double-tap to toggle")
+                    Text(isReordering ? "Drag snips to reorder" : "Pinch to zoom • Double-tap to toggle")
                         .font(.custom("Lexend-Regular", size: 13))
                         .foregroundColor(.white.opacity(0.6))
                         .padding(.bottom, 40)
@@ -154,7 +184,7 @@ struct PageDetailView: View {
     }
 
     private func snipsLayout(pageWidth: CGFloat, pageHeight: CGFloat) -> some View {
-        let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
+        let snips = page.sortedSnips
         let spacing: CGFloat = 16
 
         // Adjust snip size based on count
@@ -268,8 +298,9 @@ struct PageDetailView: View {
         }
     }
 
+    @ViewBuilder
     private func snipImage(_ snip: Snip, maxSize: CGFloat) -> some View {
-        VStack(spacing: 6) {
+        let content = VStack(spacing: 6) {
             if let image = UIImage(data: snip.maskedImageData) {
                 Image(uiImage: image)
                     .resizable()
@@ -285,6 +316,43 @@ struct PageDetailView: View {
                     .lineLimit(1)
                     .frame(maxWidth: maxSize)
             }
+        }
+
+        if isReordering {
+            content
+                .opacity(draggingSnip?.id == snip.id ? 0.5 : 1.0)
+                .scaleEffect(draggingSnip?.id == snip.id ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: draggingSnip?.id)
+                .draggable(snip.id.uuidString) {
+                    // Drag preview
+                    if let image = UIImage(data: snip.maskedImageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: maxSize * 0.8, maxHeight: maxSize * 0.8)
+                            .opacity(0.8)
+                    }
+                }
+                .dropDestination(for: String.self) { items, _ in
+                    guard let droppedIdString = items.first,
+                          let droppedId = UUID(uuidString: droppedIdString),
+                          droppedId != snip.id else { return false }
+
+                    let sortedSnips = page.sortedSnips
+                    guard let sourceIndex = sortedSnips.firstIndex(where: { $0.id == droppedId }),
+                          let destIndex = sortedSnips.firstIndex(where: { $0.id == snip.id }) else { return false }
+
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        page.reorderSnip(from: sourceIndex, to: destIndex)
+                    }
+                    return true
+                }
+                .onDrag {
+                    draggingSnip = snip
+                    return NSItemProvider(object: snip.id.uuidString as NSString)
+                }
+        } else {
+            content
         }
     }
 

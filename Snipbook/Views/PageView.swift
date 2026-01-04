@@ -7,6 +7,9 @@ struct PageView: View {
     let backgroundTexture: String
     var backgroundPattern: String = "none"
     var bookTitle: String? = nil
+    @Binding var isReordering: Bool
+
+    @State private var draggingSnip: Snip?
 
     var body: some View {
         ZStack {
@@ -75,7 +78,7 @@ struct PageView: View {
 
     private var snipsLayout: some View {
         GeometryReader { geo in
-            let snips = page.snips.sorted { $0.createdAt < $1.createdAt }
+            let snips = page.sortedSnips
 
             ZStack {
                 VStack(spacing: 0) {
@@ -115,6 +118,44 @@ struct PageView: View {
         }
     }
 
+    @ViewBuilder
+    private func draggableSnipView(_ snip: Snip, index: Int, maxSize: CGFloat) -> some View {
+        let snipView = SnipView(snip: snip, maxSize: maxSize, isDarkBackground: isDarkTexture)
+
+        if isReordering {
+            snipView
+                .opacity(draggingSnip?.id == snip.id ? 0.5 : 1.0)
+                .scaleEffect(draggingSnip?.id == snip.id ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: draggingSnip?.id)
+                .draggable(snip.id.uuidString) {
+                    // Drag preview
+                    SnipView(snip: snip, maxSize: maxSize * 0.8, isDarkBackground: isDarkTexture)
+                        .opacity(0.8)
+                }
+                .dropDestination(for: String.self) { items, _ in
+                    guard let droppedIdString = items.first,
+                          let droppedId = UUID(uuidString: droppedIdString),
+                          droppedId != snip.id else { return false }
+
+                    // Find source and destination indices
+                    let sortedSnips = page.sortedSnips
+                    guard let sourceIndex = sortedSnips.firstIndex(where: { $0.id == droppedId }),
+                          let destIndex = sortedSnips.firstIndex(where: { $0.id == snip.id }) else { return false }
+
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        page.reorderSnip(from: sourceIndex, to: destIndex)
+                    }
+                    return true
+                }
+                .onDrag {
+                    draggingSnip = snip
+                    return NSItemProvider(object: snip.id.uuidString as NSString)
+                }
+        } else {
+            snipView
+        }
+    }
+
     private func gridLayout(_ snips: [Snip], in size: CGSize) -> some View {
         let spacing: CGFloat = 10
 
@@ -122,7 +163,7 @@ struct PageView: View {
         if snips.count == 1 {
             let singleSnipSize = min(size.width * 0.65, 220)
             return AnyView(
-                SnipView(snip: snips[0], maxSize: singleSnipSize, isDarkBackground: isDarkTexture)
+                draggableSnipView(snips[0], index: 0, maxSize: singleSnipSize)
             )
         }
 
@@ -132,26 +173,26 @@ struct PageView: View {
             return AnyView(VStack(spacing: spacing) {
                 // Row 1
                 HStack(spacing: spacing) {
-                    SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[0], index: 0, maxSize: maxSnipSize)
+                    draggableSnipView(snips[1], index: 1, maxSize: maxSnipSize)
+                    draggableSnipView(snips[2], index: 2, maxSize: maxSnipSize)
                 }
                 // Row 2
                 HStack(spacing: spacing) {
-                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[4], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[5], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[3], index: 3, maxSize: maxSnipSize)
+                    draggableSnipView(snips[4], index: 4, maxSize: maxSnipSize)
+                    draggableSnipView(snips[5], index: 5, maxSize: maxSnipSize)
                 }
                 // Row 3
                 HStack(spacing: spacing) {
-                    SnipView(snip: snips[6], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[6], index: 6, maxSize: maxSnipSize)
                     if snips.count > 7 {
-                        SnipView(snip: snips[7], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                        draggableSnipView(snips[7], index: 7, maxSize: maxSnipSize)
                     } else {
                         Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                     }
                     if snips.count > 8 {
-                        SnipView(snip: snips[8], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                        draggableSnipView(snips[8], index: 8, maxSize: maxSnipSize)
                     } else {
                         Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                     }
@@ -165,20 +206,20 @@ struct PageView: View {
             return AnyView(VStack(spacing: spacing) {
                 // Top row (3 snips)
                 HStack(spacing: spacing) {
-                    SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
-                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[0], index: 0, maxSize: maxSnipSize)
+                    draggableSnipView(snips[1], index: 1, maxSize: maxSnipSize)
+                    draggableSnipView(snips[2], index: 2, maxSize: maxSnipSize)
                 }
                 // Bottom row (up to 3 snips)
                 HStack(spacing: spacing) {
-                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[3], index: 3, maxSize: maxSnipSize)
                     if snips.count > 4 {
-                        SnipView(snip: snips[4], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                        draggableSnipView(snips[4], index: 4, maxSize: maxSnipSize)
                     } else {
                         Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                     }
                     if snips.count > 5 {
-                        SnipView(snip: snips[5], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                        draggableSnipView(snips[5], index: 5, maxSize: maxSnipSize)
                     } else {
                         Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                     }
@@ -192,9 +233,9 @@ struct PageView: View {
         return AnyView(VStack(spacing: spacing) {
             // Top row
             HStack(spacing: spacing) {
-                SnipView(snip: snips[0], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                draggableSnipView(snips[0], index: 0, maxSize: maxSnipSize)
                 if snips.count > 1 {
-                    SnipView(snip: snips[1], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[1], index: 1, maxSize: maxSnipSize)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
@@ -203,12 +244,12 @@ struct PageView: View {
             // Bottom row
             HStack(spacing: spacing) {
                 if snips.count > 2 {
-                    SnipView(snip: snips[2], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[2], index: 2, maxSize: maxSnipSize)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
                 if snips.count > 3 {
-                    SnipView(snip: snips[3], maxSize: maxSnipSize, isDarkBackground: isDarkTexture)
+                    draggableSnipView(snips[3], index: 3, maxSize: maxSnipSize)
                 } else {
                     Color.clear.frame(width: maxSnipSize, height: maxSnipSize)
                 }
@@ -234,7 +275,8 @@ struct PageView: View {
     PageView(
         page: Page(),
         pageNumber: 1,
-        backgroundTexture: "paper-cream"
+        backgroundTexture: "paper-cream",
+        isReordering: .constant(false)
     )
     .padding()
 }

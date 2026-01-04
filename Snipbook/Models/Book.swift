@@ -10,6 +10,11 @@ final class Book {
     var backgroundPattern: String = "none"
     var snipsPerPage: Int = 4
 
+    // Cover properties
+    var coverType: String = "auto"  // "auto", "snip", "custom"
+    var coverSnipId: UUID?          // For "snip" type - ID of selected snip
+    @Attribute(.externalStorage) var customCoverData: Data?  // For "custom" type
+
     @Relationship(deleteRule: .cascade) var pages: [Page]
 
     var sortedPages: [Page] {
@@ -26,6 +31,17 @@ final class Book {
 
     var snipCount: Int {
         pages.reduce(0) { $0 + $1.snips.count }
+    }
+
+    /// All snips in the book, sorted by creation date (newest first)
+    var allSnips: [Snip] {
+        pages.flatMap { $0.snips }.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    /// The snip selected as the cover (if coverType is "snip")
+    var coverSnip: Snip? {
+        guard let snipId = coverSnipId else { return nil }
+        return pages.flatMap { $0.snips }.first { $0.id == snipId }
     }
 
     init(title: String = "My Snipbook") {
