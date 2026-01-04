@@ -32,5 +32,7 @@
 		<string>Lexend-Medium.ttf</string>
 		<string>Pacifico-Regular.ttf</string>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

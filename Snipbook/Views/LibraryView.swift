@@ -17,18 +17,16 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Background
-                Color(red: 0.15, green: 0.15, blue: 0.18)
-                    .ignoresSafeArea()
-
+            Group {
                 if books.isEmpty {
                     emptyLibraryView
                 } else {
                     booksList
                 }
             }
-            .navigationBarHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Color(red: 0.15, green: 0.15, blue: 0.18).ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingNewBookSheet) {
                 newBookSheet
             }
@@ -60,13 +58,13 @@ struct LibraryView: View {
     private var emptyLibraryView: some View {
         VStack {
             libraryHeader
-                .padding(.top, 16)
             Spacer()
             Text("Tap + to create a snipbook")
                 .font(.custom("Lexend-Regular", size: 14))
                 .foregroundColor(Color.white.opacity(0.5))
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     // MARK: - Library Header
@@ -92,7 +90,6 @@ struct LibraryView: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 libraryHeader
-                    .padding(.top, 16)
 
                 ForEach(books) { book in
                     BookCard(book: book)
@@ -120,6 +117,8 @@ struct LibraryView: View {
             .padding(.horizontal)
         }
         .scrollIndicators(.hidden)
+        .contentMargins(.top, 0, for: .scrollContent)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     // MARK: - New Book Sheet
