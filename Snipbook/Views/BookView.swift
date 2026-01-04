@@ -9,6 +9,7 @@ struct BookView: View {
     @State private var showingShapePicker = false
     @State private var showingCapture = false
     @State private var showingSettings = false
+    @AppStorage("lastSelectedShape") private var lastSelectedShapeRaw: String = ShapeType.postageStamp.rawValue
     @State private var selectedShape: ShapeType = .postageStamp
     @State private var lastAddedSnip: Snip?
     @State private var showUndoBanner = false
@@ -65,6 +66,16 @@ struct BookView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView(book: book)
+        }
+        .onAppear {
+            // Restore last selected shape
+            if let shape = ShapeType(rawValue: lastSelectedShapeRaw) {
+                selectedShape = shape
+            }
+        }
+        .onChange(of: selectedShape) { _, newShape in
+            // Persist shape selection
+            lastSelectedShapeRaw = newShape.rawValue
         }
     }
 

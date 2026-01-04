@@ -107,6 +107,7 @@ final class CameraService: NSObject, ObservableObject {
             if self.captureSession.canAddOutput(self.photoOutput) {
                 self.captureSession.addOutput(self.photoOutput)
                 // Use max photo dimensions for highest quality capture
+                // Software crop will be applied to match the preview zoom
                 if let maxDimensions = camera.activeFormat.supportedMaxPhotoDimensions.max(by: { $0.width * $0.height < $1.width * $1.height }) {
                     self.photoOutput.maxPhotoDimensions = maxDimensions
                 }
@@ -308,7 +309,8 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
 
         print("CameraService: Photo captured successfully")
 
-        // Apply zoom crop if zoomed in
+        // Apply software crop to match the preview zoom
+        // Hardware zoom only affects the preview, not the captured photo
         let currentZoom = self.zoomFactor
         let finalImage: UIImage
 
@@ -328,7 +330,9 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
     }
 
     private func cropImageForZoom(_ image: UIImage, zoomFactor: CGFloat) -> UIImage {
-        let originalSize = image.size
+        // Normalize orientation first
+        let normalizedImage = image.normalizedOrientation()
+        let originalSize = normalizedImage.size
 
         // Calculate the cropped region based on zoom
         let cropWidth = originalSize.width / zoomFactor
@@ -338,14 +342,11 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
 
         let cropRect = CGRect(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
 
-        // Normalize orientation first
-        let normalizedImage = image.normalizedOrientation()
-
         guard let cgImage = normalizedImage.cgImage?.cropping(to: cropRect) else {
-            return image
+            return normalizedImage
         }
 
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: .up)
+        return UIImage(cgImage: cgImage, scale: normalizedImage.scale, orientation: .up)
     }
 
     private func saveToPhotoLibrary(_ image: UIImage) {
