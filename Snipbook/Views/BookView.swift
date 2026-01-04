@@ -20,11 +20,6 @@ struct BookView: View {
     @State private var lastPageOffset: CGSize = .zero
     @StateObject private var locationService = LocationService()
 
-    // Edit mode state
-    @State private var editingSnip: Snip?
-    @State private var showingEditShapePicker = false
-    @State private var showingEditCapture = false
-
     var body: some View {
         ZStack {
             // Background
@@ -72,28 +67,6 @@ struct BookView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView(book: book)
         }
-        // Edit mode sheets
-        .sheet(isPresented: $showingEditShapePicker) {
-            ShapePickerView(selectedShape: $selectedShape) {
-                showingEditShapePicker = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    showingEditCapture = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showingEditCapture) {
-            CaptureView(
-                selectedShape: selectedShape,
-                onCapture: { imageData in
-                    updateEditingSnip(imageData: imageData)
-                },
-                onCancel: {
-                    showingEditCapture = false
-                    editingSnip = nil
-                },
-                isEditMode: true
-            )
-        }
         .onAppear {
             // Restore last selected shape
             if let shape = ShapeType(rawValue: lastSelectedShapeRaw) {
@@ -103,14 +76,6 @@ struct BookView: View {
         .onChange(of: selectedShape) { _, newShape in
             // Persist shape selection
             lastSelectedShapeRaw = newShape.rawValue
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .editSnipRequested)) { notification in
-            if let snip = notification.object as? Snip {
-                editingSnip = snip
-                // Use the snip's current shape as the default
-                selectedShape = snip.shapeType
-                showingEditShapePicker = true
-            }
         }
     }
 
@@ -323,14 +288,6 @@ struct BookView: View {
         withAnimation {
             showUndoBanner = false
         }
-    }
-
-    private func updateEditingSnip(imageData: Data) {
-        guard let snip = editingSnip else { return }
-        // Update the snip's image and shape
-        snip.maskedImageData = imageData
-        snip.shapeType = selectedShape
-        editingSnip = nil
     }
 }
 

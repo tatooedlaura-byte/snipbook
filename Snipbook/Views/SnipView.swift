@@ -85,11 +85,6 @@ struct SnipView: View {
     }
 }
 
-/// Notification for requesting snip edit
-extension Notification.Name {
-    static let editSnipRequested = Notification.Name("editSnipRequested")
-}
-
 /// Full screen detail view for a snip
 struct SnipDetailView: View {
     @Bindable var snip: Snip
@@ -168,7 +163,7 @@ struct SnipDetailView: View {
             }
 
             VStack {
-                // Top bar with delete, share, edit, and close buttons
+                // Top bar with delete, share, and close buttons
                 HStack {
                     Button(action: { showingDeleteConfirmation = true }) {
                         Image(systemName: "trash.circle.fill")
@@ -179,13 +174,6 @@ struct SnipDetailView: View {
 
                     Button(action: { showingShareSheet = true }) {
                         Image(systemName: "square.and.arrow.up.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.white.opacity(0.8))
-                            .padding(.vertical)
-                    }
-
-                    Button(action: requestEdit) {
-                        Image(systemName: "scissors.circle.fill")
                             .font(.title)
                             .foregroundColor(.white.opacity(0.8))
                             .padding(.vertical)
@@ -268,15 +256,6 @@ struct SnipDetailView: View {
                 ShareSheet(items: [image])
             }
         }
-    }
-
-    private func requestEdit() {
-        dismiss()
-        // Post notification to trigger edit flow in BookView
-        NotificationCenter.default.post(
-            name: .editSnipRequested,
-            object: snip
-        )
     }
 }
 
